@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================
+// MODELOS
+// ==========================
+
+model Usuario {
+  id           Int         @id @default(autoincrement())
+  nombre       String
+  email        String      @unique
+  password     String
+  rol          Rol         @default(REPARTIDOR)
+  creadoEn     DateTime    @default(now())
+  repartidor   Repartidor?
+}
+
+enum Rol {
+  ADMIN
+  REPARTIDOR
+}
+
+model Repartidor {
+  id            Int           @id @default(autoincrement())
+  usuarioId     Int           @unique
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
+  telefono      String?
+  vehiculo      String?
+  transacciones Transaccion[]
+  creadoEn      DateTime      @default(now())
+}
+
+model Transaccion {
+  id                  Int             @id @default(autoincrement())
+  repartidorId        Int
+  repartidor          Repartidor      @relation(fields: [repartidorId], references: [id])
+  tipo                TipoTransaccion
+  monto               Decimal         @db.Decimal(10, 2)
+  descripcion         String?
+  categoriaGasto      String?
+  categoriaIngreso    String?
+  montoSinDescuento   Decimal?        @db.Decimal(10, 2)
+  descuentoAplicado   Decimal?        @db.Decimal(10, 2)
+  cantidadPaquetes    Int?
+  paquetesFallidos    Int?
+  paquetesTotalSalida Int?
+  valorPaquete        Decimal?        @db.Decimal(10, 2)
+  montoLiquido        Decimal?        @db.Decimal(10, 2)
+  montoIva            Decimal?        @db.Decimal(10, 2)
+  fecha               DateTime        @default(now())
+}
+
+enum TipoTransaccion {
+  INGRESO
+  GASTO
+}
