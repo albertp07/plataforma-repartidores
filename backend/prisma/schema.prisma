@@ -14,18 +14,25 @@ datasource db {
 // ==========================
 
 model Usuario {
-  id           Int         @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   nombre       String
-  email        String      @unique
+  email        String        @unique
   password     String
-  rol          Rol         @default(REPARTIDOR)
-  creadoEn     DateTime    @default(now())
+  rol          Rol           @default(REPARTIDOR)
+  estado       EstadoUsuario @default(PENDIENTE)
+  creadoEn     DateTime      @default(now())
   repartidor   Repartidor?
 }
 
 enum Rol {
   ADMIN
   REPARTIDOR
+}
+
+enum EstadoUsuario {
+  PENDIENTE
+  ACTIVO
+  RECHAZADO
 }
 
 model Repartidor {

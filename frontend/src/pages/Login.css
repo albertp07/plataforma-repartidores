@@ -142,6 +142,43 @@
   box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.15);
 }
 
+.login-input-wrap input.login-input-plain {
+  padding-left: 12px;
+}
+
+.login-toggle {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #8B98A1;
+}
+
+.login-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #FFB020;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.login-link:hover {
+  filter: brightness(1.1);
+}
+
+.login-success {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4ADE80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 0;
+}
+
 .login-error {
   font-size: 13px;
   color: #FF7A6E;

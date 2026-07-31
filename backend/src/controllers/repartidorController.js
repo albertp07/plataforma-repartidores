@@ -60,4 +60,55 @@ async function obtenerMiPerfilRepartidor(req, res) {
   }
 }
 
-module.exports = { crearRepartidor, listarRepartidores, obtenerMiPerfilRepartidor };
+async function actualizarMiPerfil(req, res) {
+  try {
+    const usuarioId = req.usuario.id;
+    const { nombre, telefono, vehiculo } = req.body;
+
+    if (nombre !== undefined && String(nombre).trim() === '') {
+      return res.status(400).json({ error: 'El nombre no puede estar vacío' });
+    }
+
+    let usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (nombre !== undefined && nombre !== usuario.nombre) {
+      usuario = await prisma.usuario.update({
+        where: { id: usuarioId },
+        data: { nombre },
+      });
+    }
+
+    // El email nunca se actualiza desde este endpoint por seguridad.
+    // El perfil de Repartidor se crea si aún no existe (upsert).
+    const repartidor = await prisma.repartidor.upsert({
+      where: { usuarioId },
+      create: {
+        usuarioId,
+        telefono: telefono || null,
+        vehiculo: vehiculo || null,
+      },
+      update: {
+        telefono: telefono || null,
+        vehiculo: vehiculo || null,
+      },
+    });
+
+    const { password: _, ...usuarioSinPassword } = usuario;
+
+    res.json({ usuario: usuarioSinPassword, repartidor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el perfil' });
+  }
+}
+
+module.exports = {
+  crearRepartidor,
+  listarRepartidores,
+  obtenerMiPerfilRepartidor,
+  actualizarMiPerfil,
+};

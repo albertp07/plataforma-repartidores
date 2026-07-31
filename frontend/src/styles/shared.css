@@ -168,7 +168,22 @@
     padding: 8px 10px;
     margin: 0 0 14px;
   }
-  
+
+  .form-success {
+    font-size: 13px;
+    color: #4ADE80;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0 0 14px;
+  }
+
+  .field input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   /* Tablas */
   .data-table {
     width: 100%;

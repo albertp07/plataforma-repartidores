@@ -20,8 +20,17 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }
 
+  function actualizarUsuario(datosParciales) {
+    setUsuario((prev) => {
+      if (!prev) return prev;
+      const actualizado = { ...prev, ...datosParciales };
+      localStorage.setItem('usuario', JSON.stringify(actualizado));
+      return actualizado;
+    });
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion }}>
+    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion, actualizarUsuario }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { obtenerMiPerfil, crearPerfil } from '../services/repartidorService';
+import { obtenerMiPerfil, crearPerfil, actualizarMiPerfil } from '../services/repartidorService';
 import {
   obtenerMisTransacciones,
   crearTransaccion,
   eliminarTransaccion,
 } from '../services/transaccionService';
 import ModalConfirmar from '../components/ModalConfirmar';
+import ModalPerfil from '../components/ModalPerfil';
 import '../styles/shared.css';
 
 const IVA = 0.19;
@@ -86,11 +87,16 @@ function calcularResumen(lista) {
 }
 
 function PanelRepartidor() {
-  const { usuario, cerrarSesion } = useAuth();
+  const { usuario, cerrarSesion, actualizarUsuario } = useAuth();
   const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
+
+  const [mostrarModalPerfil, setMostrarModalPerfil] = useState(false);
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+  const [errorPerfil, setErrorPerfil] = useState('');
+  const [exitoPerfil, setExitoPerfil] = useState('');
 
   const [telefono, setTelefono] = useState('');
   const [vehiculo, setVehiculo] = useState('');
@@ -198,6 +204,32 @@ function PanelRepartidor() {
       cargarTransacciones();
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear perfil');
+    }
+  }
+
+  function handleAbrirPerfil() {
+    setErrorPerfil('');
+    setExitoPerfil('');
+    setMostrarModalPerfil(true);
+  }
+
+  function handleCerrarPerfil() {
+    setMostrarModalPerfil(false);
+  }
+
+  async function handleGuardarPerfil(datos) {
+    setGuardandoPerfil(true);
+    setErrorPerfil('');
+    setExitoPerfil('');
+    try {
+      const resultado = await actualizarMiPerfil(datos);
+      actualizarUsuario({ nombre: resultado.usuario.nombre });
+      await cargarPerfil();
+      setExitoPerfil('Perfil actualizado correctamente');
+    } catch (err) {
+      setErrorPerfil(err.response?.data?.error || 'Error al actualizar el perfil');
+    } finally {
+      setGuardandoPerfil(false);
     }
   }
 
@@ -410,6 +442,23 @@ function PanelRepartidor() {
                 Ver Dashboard
               </button>
             )}
+            <button className="btn-ghost" onClick={handleAbrirPerfil}>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ verticalAlign: 'middle', marginRight: '6px', marginTop: '-2px' }}
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+              </svg>
+              Mi Perfil
+            </button>
             <button className="btn-ghost" onClick={handleLogout}>Cerrar sesión</button>
           </div>
         </div>
@@ -901,6 +950,18 @@ function PanelRepartidor() {
         textoConfirmar="Sí, cerrar sesión"
         textoConfirmando="Cerrando..."
         claseConfirmar="btn-primary"
+      />
+
+      <ModalPerfil
+        visible={mostrarModalPerfil}
+        usuario={usuario}
+        telefonoInicial={perfil?.telefono}
+        vehiculoInicial={perfil?.vehiculo}
+        onGuardar={handleGuardarPerfil}
+        onCancelar={handleCerrarPerfil}
+        guardando={guardandoPerfil}
+        error={errorPerfil}
+        exito={exitoPerfil}
       />
     </div>
   );
