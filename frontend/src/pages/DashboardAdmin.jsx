@@ -52,6 +52,7 @@ function DashboardAdmin() {
   const [transaccionAEliminar, setTransaccionAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [filaExpandida, setFilaExpandida] = useState(null);
+  const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -69,6 +70,11 @@ function DashboardAdmin() {
   }
 
   function handleLogout() {
+    setMostrarConfirmarLogout(true);
+  }
+
+  function handleConfirmarLogout() {
+    setMostrarConfirmarLogout(false);
     cerrarSesion();
     navigate('/');
   }
@@ -352,6 +358,17 @@ function DashboardAdmin() {
         onConfirmar={handleConfirmarEliminar}
         onCancelar={() => setTransaccionAEliminar(null)}
         cargando={eliminando}
+      />
+
+      <ModalConfirmar
+        visible={mostrarConfirmarLogout}
+        titulo="Cerrar sesión"
+        mensaje="¿Seguro que quieres cerrar sesión?"
+        onConfirmar={handleConfirmarLogout}
+        onCancelar={() => setMostrarConfirmarLogout(false)}
+        textoConfirmar="Sí, cerrar sesión"
+        textoConfirmando="Cerrando..."
+        claseConfirmar="btn-primary"
       />
     </div>
   );

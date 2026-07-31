@@ -130,6 +130,7 @@ function PanelRepartidor() {
   const [transaccionAEliminar, setTransaccionAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [filaExpandida, setFilaExpandida] = useState(null);
+  const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
 
   // Cálculo en vivo: paquetes
   const exitosas = Number(entregasExitosas) || 0;
@@ -373,6 +374,11 @@ function PanelRepartidor() {
   }
 
   function handleLogout() {
+    setMostrarConfirmarLogout(true);
+  }
+
+  function handleConfirmarLogout() {
+    setMostrarConfirmarLogout(false);
     cerrarSesion();
     navigate('/');
   }
@@ -884,6 +890,17 @@ function PanelRepartidor() {
         onConfirmar={handleConfirmarEliminar}
         onCancelar={() => setTransaccionAEliminar(null)}
         cargando={eliminando}
+      />
+
+      <ModalConfirmar
+        visible={mostrarConfirmarLogout}
+        titulo="Cerrar sesión"
+        mensaje="¿Seguro que quieres cerrar sesión?"
+        onConfirmar={handleConfirmarLogout}
+        onCancelar={() => setMostrarConfirmarLogout(false)}
+        textoConfirmar="Sí, cerrar sesión"
+        textoConfirmando="Cerrando..."
+        claseConfirmar="btn-primary"
       />
     </div>
   );
