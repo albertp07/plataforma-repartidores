@@ -6,7 +6,7 @@ async function crearTransaccion(req, res) {
     const {
       tipo, monto, descripcion, fecha, categoriaGasto, categoriaIngreso,
       montoSinDescuento, descuentoAplicado,
-      cantidadPaquetes, paquetesFallidos, paquetesTotalSalida,
+      cantidadPaquetes, paquetesFallidos, paquetesTotalSalida, paquetesSobredimensionados,
       valorPaquete, montoLiquido, montoIva,
     } = req.body;
 
@@ -37,6 +37,7 @@ async function crearTransaccion(req, res) {
         cantidadPaquetes: cantidadPaquetes ?? undefined,
         paquetesFallidos: paquetesFallidos ?? undefined,
         paquetesTotalSalida: paquetesTotalSalida ?? undefined,
+        paquetesSobredimensionados: paquetesSobredimensionados ?? undefined,
         valorPaquete: valorPaquete ?? undefined,
         montoLiquido: montoLiquido ?? undefined,
         montoIva: montoIva ?? undefined,

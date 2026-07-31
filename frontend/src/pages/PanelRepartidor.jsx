@@ -105,6 +105,7 @@ function PanelRepartidor() {
   const [fechaRuta, setFechaRuta] = useState(() => isoADDMMYYYY(hoyISO()));
   const [entregasExitosas, setEntregasExitosas] = useState('');
   const [entregasFallidas, setEntregasFallidas] = useState('');
+  const [paquetesSobredimensionados, setPaquetesSobredimensionados] = useState('');
   const [valorPaquete, setValorPaquete] = useState(VALOR_PAQUETE_DEFAULT);
 
   // Ingreso: Retiros
@@ -133,9 +134,10 @@ function PanelRepartidor() {
   // Cálculo en vivo: paquetes
   const exitosas = Number(entregasExitosas) || 0;
   const fallidas = Number(entregasFallidas) || 0;
+  const sobredimensionados = Number(paquetesSobredimensionados) || 0;
   const totalSalida = exitosas + fallidas;
   const valorUnitario = Number(valorPaquete) || 0;
-  const liquido = exitosas * valorUnitario;
+  const liquido = (exitosas + sobredimensionados) * valorUnitario;
   const iva = liquido * IVA;
   const bruto = liquido + iva;
 
@@ -217,16 +219,21 @@ function PanelRepartidor() {
       return;
     }
 
+    const descripcionRuta = sobredimensionados > 0
+      ? `Ruta de reparto · ${exitosas} entregadas / ${sobredimensionados} sobredimensionados / ${fallidas} fallidas de ${totalSalida} totales`
+      : `Ruta de reparto · ${exitosas} entregadas / ${fallidas} fallidas de ${totalSalida} totales`;
+
     setGuardando(true);
     try {
       await crearTransaccion({
         tipo: 'INGRESO',
         monto: bruto,
-        descripcion: `Ruta de reparto · ${exitosas} entregadas / ${fallidas} fallidas de ${totalSalida} totales`,
+        descripcion: descripcionRuta,
         categoriaIngreso: 'PAQUETES',
         cantidadPaquetes: exitosas,
         paquetesFallidos: fallidas,
         paquetesTotalSalida: totalSalida,
+        paquetesSobredimensionados: sobredimensionados > 0 ? sobredimensionados : undefined,
         valorPaquete: valorUnitario,
         montoLiquido: liquido,
         montoIva: iva,
@@ -234,6 +241,7 @@ function PanelRepartidor() {
       });
       setEntregasExitosas('');
       setEntregasFallidas('');
+      setPaquetesSobredimensionados('');
       setFechaRuta(isoADDMMYYYY(hoyISO()));
       cargarTransacciones();
     } catch (err) {
@@ -522,6 +530,17 @@ function PanelRepartidor() {
                       </div>
 
                       <div className="field">
+                        <span className="field-label">Paquetes sobredimensionados (opcional)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={paquetesSobredimensionados}
+                          onChange={(e) => setPaquetesSobredimensionados(e.target.value)}
+                          placeholder="Ej: 1"
+                        />
+                      </div>
+
+                      <div className="field">
                         <span className="field-label">Valor por paquete</span>
                         <input
                           type="number"
@@ -537,7 +556,9 @@ function PanelRepartidor() {
                           <span>{totalSalida}</span>
                         </div>
                         <div className="calc-row">
-                          <span>Líquido ({exitosas} entregados × ${formatoPeso(valorUnitario)})</span>
+                          <span>
+                            Líquido ({exitosas} entregados{sobredimensionados > 0 ? ` + ${sobredimensionados} sobredimensionados` : ''} × ${formatoPeso(valorUnitario)})
+                          </span>
                           <span>${formatoPeso(liquido)}</span>
                         </div>
                         <div className="calc-row">
@@ -829,6 +850,7 @@ function PanelRepartidor() {
                                 {t.categoriaIngreso === 'PAQUETES' && t.cantidadPaquetes != null && (
                                   <span className="badge badge-neutral">
                                     {t.cantidadPaquetes} entregados
+                                    {t.paquetesSobredimensionados ? ` · ${t.paquetesSobredimensionados} sobredimensionados` : ''}
                                     {t.paquetesFallidos ? ` · ${t.paquetesFallidos} fallidos` : ''}
                                   </span>
                                 )}
