@@ -464,7 +464,7 @@ function PanelRepartidor() {
             <h1>Panel del Repartidor</h1>
             <p className="app-user">Bienvenido, {usuario?.nombre}</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="topbar-actions">
             {usuario?.rol === 'ADMIN' && (
               <button className="btn-ghost" onClick={() => navigate('/dashboard')}>
                 Ver Dashboard
@@ -879,6 +879,7 @@ function PanelRepartidor() {
             {transaccionesFiltradas.length === 0 ? (
               <p className="empty-state">No hay movimientos registrados en este período.</p>
             ) : (
+              <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -964,6 +965,7 @@ function PanelRepartidor() {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </>
         )}

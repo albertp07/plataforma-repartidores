@@ -29,7 +29,23 @@
     color: #8B98A1;
     margin: 0;
   }
-  
+
+  .topbar-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .row-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .btn-ghost {
     background: transparent;
     border: 1px solid #2A3238;
@@ -504,4 +520,115 @@
     background: rgba(255, 176, 32, 0.1);
     border-color: #FFB020;
     color: #FFB020;
+  }
+
+  /* ==========================================================
+     RESPONSIVE — MÓVIL (≤768px)
+     ========================================================== */
+  @media (max-width: 768px) {
+    .app-shell {
+      padding: 20px 12px 40px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    /* 1. Contenedores principales al 100% */
+    .panel,
+    .modal-box,
+    .stat-card,
+    .calc-summary {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 16px;
+    }
+
+    .modal-overlay {
+      padding: 12px;
+    }
+
+    /* 2. Formularios e inputs apilados */
+    .field-row {
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .category-grid {
+      flex-direction: column;
+    }
+
+    .category-btn {
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .period-selector {
+      flex-wrap: wrap;
+    }
+
+    .row-actions {
+      flex-direction: column;
+    }
+
+    .row-actions .btn-primary,
+    .row-actions .btn-danger {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 3. Encabezado del panel (header/nav) */
+    .app-topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+
+    .topbar-actions {
+      flex-direction: column;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .topbar-actions .btn-ghost,
+    .topbar-actions .btn-primary {
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    /* 4. Tablas adaptables: scroll horizontal contenido dentro de .table-container */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 8px;
+    }
+
+    .data-table {
+      min-width: 560px;
+      font-size: 12.5px;
+    }
+
+    .data-table thead th,
+    .data-table tbody td {
+      white-space: nowrap;
+    }
   }

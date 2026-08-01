@@ -218,7 +218,7 @@ function DashboardAdmin() {
             <h1>Panel Administrativo</h1>
             <p className="app-user">Bienvenido, {usuario?.nombre}</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="topbar-actions">
             <button className="btn-ghost" onClick={() => navigate('/panel')}>
               Ver Panel Repartidor
             </button>
@@ -252,6 +252,7 @@ function DashboardAdmin() {
             ) : pendientes.length === 0 ? (
               <p className="empty-state">No hay solicitudes pendientes.</p>
             ) : (
+              <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -272,7 +273,7 @@ function DashboardAdmin() {
                       <td>{u.repartidor?.vehiculo || '-'}</td>
                       <td>{new Date(u.creadoEn).toLocaleDateString()}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="row-actions">
                           <button
                             className="btn-primary"
                             disabled={procesandoId === u.id}
@@ -293,6 +294,7 @@ function DashboardAdmin() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </>
         ) : (
@@ -359,6 +361,7 @@ function DashboardAdmin() {
             </div>
 
             <p className="section-title">Detalle por repartidor</p>
+            <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
@@ -387,11 +390,13 @@ function DashboardAdmin() {
                 )}
               </tbody>
             </table>
+            </div>
 
             <p className="section-title" style={{ marginTop: '28px' }}>Todos los movimientos</p>
             {movimientosFiltrados.length === 0 ? (
               <p className="empty-state">No hay movimientos en este período.</p>
             ) : (
+              <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -473,6 +478,7 @@ function DashboardAdmin() {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </>
         )}
