@@ -138,6 +138,10 @@ function PanelRepartidor() {
   const [filaExpandida, setFilaExpandida] = useState(null);
   const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
 
+  useEffect(() => {
+    document.title = 'Aryal - Panel Repartidor';
+  }, []);
+
   // Cálculo en vivo: paquetes
   const exitosas = Number(entregasExitosas) || 0;
   const fallidas = Number(entregasFallidas) || 0;

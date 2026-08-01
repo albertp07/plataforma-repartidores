@@ -68,6 +68,10 @@ function DashboardAdmin() {
   const [errorPendientes, setErrorPendientes] = useState('');
 
   useEffect(() => {
+    document.title = 'Aryal - Dashboard';
+  }, []);
+
+  useEffect(() => {
     cargarDatos();
     cargarPendientes();
   }, []);

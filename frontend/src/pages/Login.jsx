@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, registrar } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,10 @@ import './Login.css';
 
 function Login() {
   const [vista, setVista] = useState('login'); // 'login' | 'registro'
+
+  useEffect(() => {
+    document.title = 'Aryal - Iniciar Sesión';
+  }, []);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
