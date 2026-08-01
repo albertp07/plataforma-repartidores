@@ -61,6 +61,16 @@ function formatearEntradaFecha(valor) {
   return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
 }
 
+// Cantidades (entregas, retiros, etc.): máximo 4 dígitos, sin negativos
+function limitarCantidad(valor) {
+  return valor.replace(/\D/g, '').slice(0, 4);
+}
+
+// Montos / valores monetarios: máximo 8 dígitos, sin negativos
+function limitarMonto(valor) {
+  return valor.replace(/\D/g, '').slice(0, 8);
+}
+
 function inicioSemanaActual() {
   const hoy = new Date();
   const dia = hoy.getDay();
@@ -569,8 +579,9 @@ function PanelRepartidor() {
                           <input
                             type="number"
                             min="0"
+                            max="9999"
                             value={entregasExitosas}
-                            onChange={(e) => setEntregasExitosas(e.target.value)}
+                            onChange={(e) => setEntregasExitosas(limitarCantidad(e.target.value))}
                             placeholder="Ej: 45"
                             required
                           />
@@ -581,8 +592,9 @@ function PanelRepartidor() {
                           <input
                             type="number"
                             min="0"
+                            max="9999"
                             value={entregasFallidas}
-                            onChange={(e) => setEntregasFallidas(e.target.value)}
+                            onChange={(e) => setEntregasFallidas(limitarCantidad(e.target.value))}
                             placeholder="Ej: 5"
                           />
                         </div>
@@ -593,8 +605,9 @@ function PanelRepartidor() {
                         <input
                           type="number"
                           min="0"
+                          max="9999"
                           value={paquetesSobredimensionados}
-                          onChange={(e) => setPaquetesSobredimensionados(e.target.value)}
+                          onChange={(e) => setPaquetesSobredimensionados(limitarCantidad(e.target.value))}
                           placeholder="Ej: 1"
                         />
                       </div>
@@ -604,8 +617,9 @@ function PanelRepartidor() {
                         <input
                           type="number"
                           min="0"
+                          max="99999999"
                           value={valorPaquete}
-                          onChange={(e) => setValorPaquete(e.target.value)}
+                          onChange={(e) => setValorPaquete(limitarMonto(e.target.value))}
                         />
                       </div>
 
@@ -654,8 +668,9 @@ function PanelRepartidor() {
                         <input
                           type="number"
                           min="0"
+                          max="9999"
                           value={cantidadRetiros}
-                          onChange={(e) => setCantidadRetiros(e.target.value)}
+                          onChange={(e) => setCantidadRetiros(limitarCantidad(e.target.value))}
                           placeholder="Ej: 20"
                           required
                         />
@@ -666,8 +681,9 @@ function PanelRepartidor() {
                         <input
                           type="number"
                           min="0"
+                          max="99999999"
                           value={valorRetiro}
-                          onChange={(e) => setValorRetiro(e.target.value)}
+                          onChange={(e) => setValorRetiro(limitarMonto(e.target.value))}
                         />
                       </div>
 
@@ -735,8 +751,9 @@ function PanelRepartidor() {
                             <input
                               type="number"
                               min="0"
+                              max="99999999"
                               value={montoSinDescuento}
-                              onChange={(e) => setMontoSinDescuento(e.target.value)}
+                              onChange={(e) => setMontoSinDescuento(limitarMonto(e.target.value))}
                               placeholder="Ej: 20000"
                               required
                             />
@@ -747,8 +764,9 @@ function PanelRepartidor() {
                             <input
                               type="number"
                               min="0"
+                              max="99999999"
                               value={descuentoCombustible}
-                              onChange={(e) => setDescuentoCombustible(e.target.value)}
+                              onChange={(e) => setDescuentoCombustible(limitarMonto(e.target.value))}
                               placeholder="Ej: 1500"
                             />
                           </div>
@@ -797,8 +815,9 @@ function PanelRepartidor() {
                           <input
                             type="number"
                             min="0"
+                            max="99999999"
                             value={montoGasto}
-                            onChange={(e) => setMontoGasto(e.target.value)}
+                            onChange={(e) => setMontoGasto(limitarMonto(e.target.value))}
                             required
                           />
                         </div>

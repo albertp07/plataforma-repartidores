@@ -244,20 +244,30 @@
     border-radius: 8px;
     padding: 14px 16px;
     margin: 4px 0 18px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
-  
+
   .calc-row {
     display: flex;
     justify-content: space-between;
+    gap: 10px;
     font-size: 15.5px;
     color: #A6B0B6;
     padding: 6px 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
-  
+
+  .calc-row span {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
   .calc-row + .calc-row {
     border-top: 1px solid #22282D;
   }
-  
+
   .calc-total {
     color: #FFB020;
     font-family: 'Space Grotesk', sans-serif;
