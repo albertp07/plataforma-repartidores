@@ -141,7 +141,8 @@
   }
   
   .field input,
-  .field select {
+  .field select,
+  .field textarea {
     background: #14181B;
     border: 1px solid #2A3238;
     border-radius: 8px;
@@ -152,11 +153,21 @@
     font-family: 'Inter', sans-serif;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  
+
   .field input:focus-visible,
-  .field select:focus-visible {
+  .field select:focus-visible,
+  .field textarea:focus-visible {
     border-color: #FFB020;
     box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.15);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 64px;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
   
   .form-error {
@@ -179,7 +190,8 @@
     margin: 0 0 14px;
   }
 
-  .field input:disabled {
+  .field input:disabled,
+  .field textarea:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

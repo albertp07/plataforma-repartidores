@@ -71,6 +71,20 @@ function limitarMonto(valor) {
   return valor.replace(/\D/g, '').slice(0, 8);
 }
 
+// Litros (permite un decimal, ej. "8.5"): máximo 6 dígitos en total, sin negativos ni notación científica
+function limitarLitros(valor) {
+  let limpio = valor.replace(/[^0-9.]/g, '');
+  const primerPunto = limpio.indexOf('.');
+  if (primerPunto !== -1) {
+    limpio = limpio.slice(0, primerPunto + 1) + limpio.slice(primerPunto + 1).replace(/\./g, '');
+  }
+  const digitos = limpio.replace('.', '');
+  if (digitos.length > 6) {
+    limpio = limpio.slice(0, limpio.length - (digitos.length - 6));
+  }
+  return limpio;
+}
+
 function inicioSemanaActual() {
   const hoy = new Date();
   const dia = hoy.getDay();
@@ -777,8 +791,9 @@ function PanelRepartidor() {
                               <input
                                 type="number"
                                 min="0"
+                                max="9999"
                                 value={litros}
-                                onChange={(e) => setLitros(e.target.value)}
+                                onChange={(e) => setLitros(limitarLitros(e.target.value))}
                                 placeholder="Ej: 8.5"
                               />
                             </div>
@@ -787,8 +802,9 @@ function PanelRepartidor() {
                               <input
                                 type="number"
                                 min="0"
+                                max="99999999"
                                 value={kilometraje}
-                                onChange={(e) => setKilometraje(e.target.value)}
+                                onChange={(e) => setKilometraje(limitarMonto(e.target.value))}
                                 placeholder="Ej: 45200"
                               />
                             </div>
@@ -840,7 +856,9 @@ function PanelRepartidor() {
                       {categoriaGasto === 'OTROS' && (
                         <div className="field">
                           <span className="field-label">Descripción</span>
-                          <input
+                          <textarea
+                            rows="3"
+                            maxLength={500}
                             value={descripcionOtros}
                             onChange={(e) => setDescripcionOtros(e.target.value)}
                             placeholder="Ej: Almuerzo en ruta"
