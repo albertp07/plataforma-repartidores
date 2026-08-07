@@ -17,7 +17,8 @@ model Usuario {
   id           Int           @id @default(autoincrement())
   nombre       String
   email        String        @unique
-  password     String
+  password     String?
+  googleId     String?       @unique
   rol          Rol           @default(REPARTIDOR)
   estado       EstadoUsuario @default(PENDIENTE)
   creadoEn     DateTime      @default(now())

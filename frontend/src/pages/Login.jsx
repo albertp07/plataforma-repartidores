@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, registrar } from '../services/authService';
+import { GoogleLogin } from '@react-oauth/google';
+import { login, registrar, loginConGoogle } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
@@ -43,6 +44,21 @@ function Login() {
       navigate(data.usuario.rol === 'ADMIN' ? '/dashboard' : '/panel');
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas. Intenta de nuevo.');
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function handleGoogleExito(credentialResponse) {
+    setError('');
+    setCargando(true);
+
+    try {
+      const data = await loginConGoogle(credentialResponse.credential);
+      iniciarSesion(data.usuario, data.token);
+      navigate(data.usuario.rol === 'ADMIN' ? '/dashboard' : '/panel');
+    } catch (err) {
+      setError(err.response?.data?.error || 'No se pudo iniciar sesión con Google. Intenta de nuevo.');
     } finally {
       setCargando(false);
     }
@@ -159,6 +175,20 @@ function Login() {
                 {cargando ? 'Verificando…' : 'Ingresar'}
               </button>
             </form>
+
+            <div className="login-divider">
+              <span>o</span>
+            </div>
+
+            <div className="login-google">
+              <GoogleLogin
+                onSuccess={handleGoogleExito}
+                onError={() => setError('No se pudo iniciar sesión con Google. Intenta de nuevo.')}
+                text="continue_with"
+                shape="pill"
+                width="100%"
+              />
+            </div>
 
             <p className="login-toggle">
               ¿No tienes cuenta?{' '}

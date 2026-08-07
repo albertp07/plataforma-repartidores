@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../config/prisma');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 async function registrarUsuario(req, res) {
   try {
@@ -81,7 +84,7 @@ async function login(req, res) {
 
     const usuario = await prisma.usuario.findUnique({ where: { email } });
 
-    if (!usuario) {
+    if (!usuario || !usuario.password) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
@@ -111,6 +114,90 @@ async function login(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+}
+
+// Login/registro con Google. Recibe el idToken emitido por Google Identity
+// Services (credential), lo verifica contra GOOGLE_CLIENT_ID y:
+//  - si ya existe un usuario con ese googleId o email, lo loguea (aplicando
+//    las mismas reglas de estado PENDIENTE/RECHAZADO que el login normal),
+//  - si no existe, lo crea en estado PENDIENTE, igual que en el registro
+//    manual: Google solo verifica la identidad, no autoriza el acceso.
+async function loginConGoogle(req, res) {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ error: 'Falta el credential de Google' });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      console.error('GOOGLE_CLIENT_ID no está configurado en el backend');
+      return res.status(500).json({ error: 'Login con Google no está configurado' });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verificationError) {
+      return res.status(401).json({ error: 'Token de Google inválido' });
+    }
+
+    const { sub: googleId, email, name, email_verified: emailVerificado } = payload;
+
+    if (!emailVerificado) {
+      return res.status(401).json({ error: 'El email de Google no está verificado' });
+    }
+
+    let usuario = await prisma.usuario.findUnique({ where: { googleId } });
+
+    if (!usuario) {
+      // No hay cuenta vinculada por googleId. Buscamos por email para no
+      // duplicar cuentas si la persona ya se había registrado manualmente.
+      usuario = await prisma.usuario.findUnique({ where: { email } });
+
+      if (usuario) {
+        usuario = await prisma.usuario.update({
+          where: { email },
+          data: { googleId },
+        });
+      } else {
+        usuario = await prisma.usuario.create({
+          data: {
+            nombre: name || email,
+            email,
+            googleId,
+            rol: 'REPARTIDOR',
+            estado: 'PENDIENTE',
+          },
+        });
+      }
+    }
+
+    if (usuario.estado === 'PENDIENTE') {
+      return res.status(403).json({ error: 'Tu cuenta aún no ha sido aprobada por el administrador' });
+    }
+
+    if (usuario.estado === 'RECHAZADO') {
+      return res.status(403).json({ error: 'Tu solicitud de acceso fue rechazada' });
+    }
+
+    const token = jwt.sign(
+      { id: usuario.id, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    const { password: _, ...usuarioSinPassword } = usuario;
+
+    res.json({ usuario: usuarioSinPassword, token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al iniciar sesión con Google' });
   }
 }
 
@@ -163,4 +250,10 @@ async function actualizarEstado(req, res) {
   }
 }
 
-module.exports = { registrarUsuario, login, listarPendientes, actualizarEstado };
+module.exports = {
+  registrarUsuario,
+  login,
+  loginConGoogle,
+  listarPendientes,
+  actualizarEstado,
+};

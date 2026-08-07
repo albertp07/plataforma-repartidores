@@ -234,6 +234,28 @@
   left: 130%;
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #545E64;
+  font-size: 12px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(84, 94, 100, 0.35);
+}
+
+.login-google {
+  display: flex;
+  justify-content: center;
+}
+
 .login-footer {
   margin: 22px 0 0;
   text-align: center;
