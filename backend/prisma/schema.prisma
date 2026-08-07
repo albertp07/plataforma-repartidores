@@ -64,6 +64,7 @@ model Transaccion {
   valorPaquete        Decimal?        @db.Decimal(10, 2)
   montoLiquido        Decimal?        @db.Decimal(10, 2)
   montoIva            Decimal?        @db.Decimal(10, 2)
+  observaciones       String?
   fecha               DateTime        @default(now())
 }
 

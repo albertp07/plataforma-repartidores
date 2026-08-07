@@ -423,7 +423,12 @@ function DashboardAdmin() {
                           <td>{new Date(m.fecha).toLocaleDateString()}</td>
                           <td>{m.repartidor.usuario.nombre}</td>
                           <td><span className={`tag ${m.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{m.tipo}</span></td>
-                          <td>{m.descripcion || '-'}</td>
+                          <td>
+                            {m.descripcion || '-'}
+                            {m.observaciones && (
+                              <span className="obs-dot" title="Tiene observaciones">●</span>
+                            )}
+                          </td>
                           <td>${formatoPeso(m.monto)}</td>
                           <td>
                             {tieneDesglose && (
@@ -470,6 +475,9 @@ function DashboardAdmin() {
                                   </span>
                                 )}
                               </div>
+                              {m.observaciones && (
+                                <p className="detail-note">{m.observaciones}</p>
+                              )}
                             </td>
                           </tr>
                         )}

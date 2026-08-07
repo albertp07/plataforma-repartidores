@@ -9,6 +9,7 @@ import {
 } from '../services/transaccionService';
 import ModalConfirmar from '../components/ModalConfirmar';
 import ModalPerfil from '../components/ModalPerfil';
+import SelectorFecha from '../components/SelectorFecha';
 import '../styles/shared.css';
 
 const IVA = 0.19;
@@ -52,13 +53,6 @@ function ddmmyyyyAISO(texto) {
   if (!match) return null;
   const [, d, m, y] = match;
   return `${y}-${m}-${d}`;
-}
-
-function formatearEntradaFecha(valor) {
-  const digits = valor.replace(/\D/g, '').slice(0, 8);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
 }
 
 // Cantidades (entregas, retiros, etc.): máximo 4 dígitos, sin negativos
@@ -137,11 +131,13 @@ function PanelRepartidor() {
   const [entregasFallidas, setEntregasFallidas] = useState('');
   const [paquetesSobredimensionados, setPaquetesSobredimensionados] = useState('');
   const [valorPaquete, setValorPaquete] = useState(VALOR_PAQUETE_DEFAULT);
+  const [observacionesRuta, setObservacionesRuta] = useState('');
 
   // Ingreso: Retiros
   const [fechaRetiro, setFechaRetiro] = useState(() => isoADDMMYYYY(hoyISO()));
   const [cantidadRetiros, setCantidadRetiros] = useState('');
   const [valorRetiro, setValorRetiro] = useState(VALOR_RETIRO_DEFAULT);
+  const [observacionesRetiro, setObservacionesRetiro] = useState('');
 
   // Gasto: categorización rápida
   const [fechaGasto, setFechaGasto] = useState(() => isoADDMMYYYY(hoyISO()));
@@ -298,11 +294,13 @@ function PanelRepartidor() {
         valorPaquete: valorUnitario,
         montoLiquido: liquido,
         montoIva: iva,
+        observaciones: observacionesRuta.trim() || undefined,
         fecha: `${fechaISO}T12:00:00.000Z`,
       });
       setEntregasExitosas('');
       setEntregasFallidas('');
       setPaquetesSobredimensionados('');
+      setObservacionesRuta('');
       setFechaRuta(isoADDMMYYYY(hoyISO()));
       cargarTransacciones();
     } catch (err) {
@@ -342,9 +340,11 @@ function PanelRepartidor() {
         valorPaquete: valorRetiroUnit,
         montoLiquido: liquidoRetiro,
         montoIva: ivaRetiro,
+        observaciones: observacionesRetiro.trim() || undefined,
         fecha: `${fechaISO}T12:00:00.000Z`,
       });
       setCantidadRetiros('');
+      setObservacionesRetiro('');
       setFechaRetiro(isoADDMMYYYY(hoyISO()));
       cargarTransacciones();
     } catch (err) {
@@ -576,13 +576,10 @@ function PanelRepartidor() {
                     <form onSubmit={handleGuardarRuta}>
                       <div className="field">
                         <span className="field-label">Fecha de la ruta</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="DD-MM-AAAA"
+                        <SelectorFecha
+                          id="fecha-ruta"
                           value={fechaRuta}
-                          onChange={(e) => setFechaRuta(formatearEntradaFecha(e.target.value))}
-                          maxLength={10}
+                          onChange={setFechaRuta}
                           required
                         />
                       </div>
@@ -637,6 +634,17 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      <div className="field">
+                        <span className="field-label">Observaciones (opcional)</span>
+                        <textarea
+                          rows="3"
+                          maxLength={500}
+                          value={observacionesRuta}
+                          onChange={(e) => setObservacionesRuta(e.target.value)}
+                          placeholder="Ej: 5 paquetes hechos en la mañana"
+                        />
+                      </div>
+
                       <div className="calc-summary">
                         <div className="calc-row">
                           <span>Paquetes totales al salir</span>
@@ -666,13 +674,10 @@ function PanelRepartidor() {
                     <form onSubmit={handleGuardarRetiro}>
                       <div className="field">
                         <span className="field-label">Fecha del retiro</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="DD-MM-AAAA"
+                        <SelectorFecha
+                          id="fecha-retiro"
                           value={fechaRetiro}
-                          onChange={(e) => setFechaRetiro(formatearEntradaFecha(e.target.value))}
-                          maxLength={10}
+                          onChange={setFechaRetiro}
                           required
                         />
                       </div>
@@ -701,6 +706,17 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      <div className="field">
+                        <span className="field-label">Observaciones (opcional)</span>
+                        <textarea
+                          rows="3"
+                          maxLength={500}
+                          value={observacionesRetiro}
+                          onChange={(e) => setObservacionesRetiro(e.target.value)}
+                          placeholder="Ej: Retiros hechos en la mañana"
+                        />
+                      </div>
+
                       <div className="calc-summary">
                         <div className="calc-row">
                           <span>Líquido ({retiros} × ${formatoPeso(valorRetiroUnit)})</span>
@@ -726,13 +742,10 @@ function PanelRepartidor() {
                 <form onSubmit={handleCrearGasto}>
                   <div className="field">
                     <span className="field-label">Fecha del gasto</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="DD-MM-AAAA"
+                    <SelectorFecha
+                      id="fecha-gasto"
                       value={fechaGasto}
-                      onChange={(e) => setFechaGasto(formatearEntradaFecha(e.target.value))}
-                      maxLength={10}
+                      onChange={setFechaGasto}
                       required
                     />
                   </div>
@@ -904,7 +917,12 @@ function PanelRepartidor() {
                         >
                           <td>{new Date(t.fecha).toLocaleDateString()}</td>
                           <td><span className={`tag ${t.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{t.tipo}</span></td>
-                          <td>{t.descripcion || '-'}</td>
+                          <td>
+                            {t.descripcion || '-'}
+                            {t.observaciones && (
+                              <span className="obs-dot" title="Tiene observaciones">●</span>
+                            )}
+                          </td>
                           <td>${formatoPeso(t.monto)}</td>
                           <td>
                             {tieneDesglose && (
@@ -957,6 +975,9 @@ function PanelRepartidor() {
                                   </span>
                                 )}
                               </div>
+                              {t.observaciones && (
+                                <p className="detail-note">{t.observaciones}</p>
+                              )}
                             </td>
                           </tr>
                         )}

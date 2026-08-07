@@ -7,7 +7,7 @@ async function crearTransaccion(req, res) {
       tipo, monto, descripcion, fecha, categoriaGasto, categoriaIngreso,
       montoSinDescuento, descuentoAplicado,
       cantidadPaquetes, paquetesFallidos, paquetesTotalSalida, paquetesSobredimensionados,
-      valorPaquete, montoLiquido, montoIva,
+      valorPaquete, montoLiquido, montoIva, observaciones,
     } = req.body;
 
     if (!tipo || !monto) {
@@ -41,6 +41,7 @@ async function crearTransaccion(req, res) {
         valorPaquete: valorPaquete ?? undefined,
         montoLiquido: montoLiquido ?? undefined,
         montoIva: montoIva ?? undefined,
+        observaciones: observaciones ?? undefined,
         fecha: fecha ? new Date(fecha) : undefined,
       },
     });
