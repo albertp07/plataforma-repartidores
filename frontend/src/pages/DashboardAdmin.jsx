@@ -32,6 +32,33 @@ function formatoPeso(valor) {
   return Math.round(valor).toLocaleString('es-CL');
 }
 
+function ordenTipoMovimiento(m) {
+  if (m.tipo === 'GASTO') return 0;
+  if (m.categoriaIngreso === 'PAQUETES') return 1;
+  if (m.categoriaIngreso === 'RETIROS') return 2;
+  return 3;
+}
+
+function ordenarMovimientos(lista) {
+  return [...lista].sort((a, b) => {
+    const diaA = new Date(a.fecha).toISOString().slice(0, 10);
+    const diaB = new Date(b.fecha).toISOString().slice(0, 10);
+    if (diaA !== diaB) return diaA < diaB ? 1 : -1;
+    return ordenTipoMovimiento(a) - ordenTipoMovimiento(b);
+  });
+}
+
+function formatoDescripcionMovimiento(m) {
+  if (m.categoriaIngreso !== 'PAQUETES' || m.cantidadPaquetes == null) {
+    return m.descripcion || '-';
+  }
+  const partes = [`${m.cantidadPaquetes} entregadas`];
+  if (m.paquetesSobredimensionados) partes.push(`${m.paquetesSobredimensionados} S/D`);
+  if (m.paquetesFallidos) partes.push(`${m.paquetesFallidos} fallidas`);
+  const total = m.paquetesTotalSalida ?? (m.cantidadPaquetes + (m.paquetesFallidos || 0));
+  return `Reparto · ${partes.join(' / ')} de ${total} totales`;
+}
+
 function inicioSemanaActual() {
   const hoy = new Date();
   const dia = hoy.getDay();
@@ -40,6 +67,22 @@ function inicioSemanaActual() {
   inicio.setDate(hoy.getDate() + diff);
   inicio.setHours(0, 0, 0, 0);
   return inicio;
+}
+
+// offset 0 = semana actual, 1 = semana pasada, etc.
+function rangoSemana(offset) {
+  const inicio = inicioSemanaActual();
+  inicio.setDate(inicio.getDate() - offset * 7);
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + 6);
+  fin.setHours(23, 59, 59, 999);
+  return { inicio, fin };
+}
+
+function formatoRangoSemana(offset) {
+  const { inicio, fin } = rangoSemana(offset);
+  const fmt = (d) => d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+  return `${fmt(inicio)} al ${fmt(fin)}`;
 }
 
 function inicioMesActual() {
@@ -56,6 +99,7 @@ function DashboardAdmin() {
   const [movimientos, setMovimientos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [periodo, setPeriodo] = useState('TODO');
+  const [semanaOffset, setSemanaOffset] = useState(0);
 
   const [transaccionAEliminar, setTransaccionAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
@@ -160,6 +204,13 @@ function DashboardAdmin() {
     const fecha = new Date(m.fecha);
     const limite = periodo === 'SEMANA' ? inicioSemanaActual() : inicioMesActual();
     return fecha >= limite;
+  });
+
+  // "Todos los movimientos": navegación semana por semana (lunes a domingo), independiente del filtro de período
+  const { inicio: inicioSemanaVista, fin: finSemanaVista } = rangoSemana(semanaOffset);
+  const movimientosSemana = movimientos.filter((m) => {
+    const fecha = new Date(m.fecha);
+    return fecha >= inicioSemanaVista && fecha <= finSemanaVista;
   });
 
   // Resumen general (recalculado según el período)
@@ -392,9 +443,31 @@ function DashboardAdmin() {
             </table>
             </div>
 
-            <p className="section-title" style={{ marginTop: '28px' }}>Todos los movimientos</p>
-            {movimientosFiltrados.length === 0 ? (
-              <p className="empty-state">No hay movimientos en este período.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '28px', marginBottom: '14px' }}>
+              <p className="section-title" style={{ margin: 0 }}>Todos los movimientos</p>
+              <div className="week-nav">
+                <button
+                  type="button"
+                  className="week-nav-btn"
+                  onClick={() => setSemanaOffset((o) => o + 1)}
+                  aria-label="Semana anterior"
+                >
+                  ‹
+                </button>
+                <span className="week-range">{formatoRangoSemana(semanaOffset)}</span>
+                <button
+                  type="button"
+                  className="week-nav-btn"
+                  onClick={() => setSemanaOffset((o) => Math.max(o - 1, 0))}
+                  disabled={semanaOffset === 0}
+                  aria-label="Semana siguiente"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+            {movimientosSemana.length === 0 ? (
+              <p className="empty-state">No hay movimientos en esta semana.</p>
             ) : (
               <div className="table-container">
               <table className="data-table">
@@ -410,21 +483,22 @@ function DashboardAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {movimientosFiltrados.map((m) => {
+                  {ordenarMovimientos(movimientosSemana).map((m, idx) => {
                     const tieneDesglose = m.tipo === 'INGRESO' && m.montoLiquido != null;
                     const expandida = filaExpandida === m.id;
+                    const claseFila = [idx % 2 === 1 ? 'row-odd' : '', tieneDesglose ? 'row-clickable' : ''].filter(Boolean).join(' ');
                     return (
                       <>
                         <tr
                           key={m.id}
-                          className={tieneDesglose ? 'row-clickable' : ''}
+                          className={claseFila}
                           onClick={() => tieneDesglose && toggleFila(m.id)}
                         >
                           <td>{new Date(m.fecha).toLocaleDateString()}</td>
                           <td>{m.repartidor.usuario.nombre}</td>
                           <td><span className={`tag ${m.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{m.tipo}</span></td>
                           <td>
-                            {m.descripcion || '-'}
+                            {formatoDescripcionMovimiento(m)}
                             {m.observaciones && (
                               <span className="obs-dot" title="Tiene observaciones">●</span>
                             )}
@@ -456,7 +530,7 @@ function DashboardAdmin() {
                           </td>
                         </tr>
                         {tieneDesglose && expandida && (
-                          <tr className="row-detail">
+                          <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={7}>
                               <div className="detail-badges">
                                 <span className="badge badge-neutral">
@@ -470,8 +544,12 @@ function DashboardAdmin() {
                                 </span>
                                 {m.cantidadPaquetes != null && (
                                   <span className="badge badge-neutral">
-                                    {m.cantidadPaquetes} entregados
-                                    {m.paquetesFallidos ? ` · ${m.paquetesFallidos} fallidos` : ''}
+                                    {m.cantidadPaquetes} entregados · {m.paquetesFallidos || 0} fallidos
+                                  </span>
+                                )}
+                                {m.paquetesSobredimensionados != null && m.paquetesSobredimensionados > 0 && (
+                                  <span className="badge badge-neutral">
+                                    {m.paquetesSobredimensionados} Sobredimensionados
                                   </span>
                                 )}
                               </div>

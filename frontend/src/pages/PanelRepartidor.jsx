@@ -39,6 +39,33 @@ function formatoPeso(valor) {
   return Math.round(valor).toLocaleString('es-CL');
 }
 
+function ordenTipoMovimiento(t) {
+  if (t.tipo === 'GASTO') return 0;
+  if (t.categoriaIngreso === 'PAQUETES') return 1;
+  if (t.categoriaIngreso === 'RETIROS') return 2;
+  return 3;
+}
+
+function ordenarMovimientos(lista) {
+  return [...lista].sort((a, b) => {
+    const diaA = new Date(a.fecha).toISOString().slice(0, 10);
+    const diaB = new Date(b.fecha).toISOString().slice(0, 10);
+    if (diaA !== diaB) return diaA < diaB ? 1 : -1;
+    return ordenTipoMovimiento(a) - ordenTipoMovimiento(b);
+  });
+}
+
+function formatoDescripcionMovimiento(t) {
+  if (t.categoriaIngreso !== 'PAQUETES' || t.cantidadPaquetes == null) {
+    return t.descripcion || '-';
+  }
+  const partes = [`${t.cantidadPaquetes} entregadas`];
+  if (t.paquetesSobredimensionados) partes.push(`${t.paquetesSobredimensionados} S/D`);
+  if (t.paquetesFallidos) partes.push(`${t.paquetesFallidos} fallidas`);
+  const total = t.paquetesTotalSalida ?? (t.cantidadPaquetes + (t.paquetesFallidos || 0));
+  return `Reparto · ${partes.join(' / ')} de ${total} totales`;
+}
+
 function hoyISO() {
   return new Date().toISOString().split('T')[0];
 }
@@ -89,6 +116,22 @@ function inicioSemanaActual() {
   return inicio;
 }
 
+// offset 0 = semana actual, 1 = semana pasada, etc.
+function rangoSemana(offset) {
+  const inicio = inicioSemanaActual();
+  inicio.setDate(inicio.getDate() - offset * 7);
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + 6);
+  fin.setHours(23, 59, 59, 999);
+  return { inicio, fin };
+}
+
+function formatoRangoSemana(offset) {
+  const { inicio, fin } = rangoSemana(offset);
+  const fmt = (d) => d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+  return `${fmt(inicio)} al ${fmt(fin)}`;
+}
+
 function inicioMesActual() {
   const hoy = new Date();
   return new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0, 0, 0, 0);
@@ -121,6 +164,7 @@ function PanelRepartidor() {
 
   const [transacciones, setTransacciones] = useState([]);
   const [periodo, setPeriodo] = useState('TODO');
+  const [semanaOffset, setSemanaOffset] = useState(0);
 
   const [tipo, setTipo] = useState('INGRESO');
   const [modoIngreso, setModoIngreso] = useState('PAQUETES');
@@ -185,14 +229,21 @@ function PanelRepartidor() {
   const totalConDescuento = Math.max(totalSinDescuento - descuento, 0);
 
   // Filtro por período
-  const transaccionesFiltradas = transacciones.filter((t) => {
+  const transaccionesFiltradas = ordenarMovimientos(transacciones.filter((t) => {
     if (periodo === 'TODO') return true;
     const fecha = new Date(t.fecha);
     const limite = periodo === 'SEMANA' ? inicioSemanaActual() : inicioMesActual();
     return fecha >= limite;
-  });
+  }));
 
   const resumenMostrado = calcularResumen(transaccionesFiltradas);
+
+  // Historial: navegación semana por semana (lunes a domingo), independiente del filtro de período
+  const { inicio: inicioSemanaVista, fin: finSemanaVista } = rangoSemana(semanaOffset);
+  const transaccionesSemana = ordenarMovimientos(transacciones.filter((t) => {
+    const fecha = new Date(t.fecha);
+    return fecha >= inicioSemanaVista && fecha <= finSemanaVista;
+  }));
 
   useEffect(() => {
     cargarPerfil();
@@ -277,8 +328,8 @@ function PanelRepartidor() {
     }
 
     const descripcionRuta = sobredimensionados > 0
-      ? `Ruta de reparto · ${exitosas} entregadas / ${sobredimensionados} sobredimensionados / ${fallidas} fallidas de ${totalSalida} totales`
-      : `Ruta de reparto · ${exitosas} entregadas / ${fallidas} fallidas de ${totalSalida} totales`;
+      ? `Reparto · ${exitosas} entregadas / ${sobredimensionados} S/D${fallidas > 0 ? ` / ${fallidas} fallidas` : ''} de ${totalSalida} totales`
+      : `Reparto · ${exitosas} entregadas${fallidas > 0 ? ` / ${fallidas} fallidas` : ''} de ${totalSalida} totales`;
 
     setGuardando(true);
     try {
@@ -888,9 +939,31 @@ function PanelRepartidor() {
               )}
             </div>
 
-            <p className="section-title">Historial</p>
-            {transaccionesFiltradas.length === 0 ? (
-              <p className="empty-state">No hay movimientos registrados en este período.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              <p className="section-title" style={{ margin: 0 }}>Historial</p>
+              <div className="week-nav">
+                <button
+                  type="button"
+                  className="week-nav-btn"
+                  onClick={() => setSemanaOffset((o) => o + 1)}
+                  aria-label="Semana anterior"
+                >
+                  ‹
+                </button>
+                <span className="week-range">{formatoRangoSemana(semanaOffset)}</span>
+                <button
+                  type="button"
+                  className="week-nav-btn"
+                  onClick={() => setSemanaOffset((o) => Math.max(o - 1, 0))}
+                  disabled={semanaOffset === 0}
+                  aria-label="Semana siguiente"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+            {transaccionesSemana.length === 0 ? (
+              <p className="empty-state">No hay movimientos registrados en esta semana.</p>
             ) : (
               <div className="table-container">
               <table className="data-table">
@@ -905,20 +978,21 @@ function PanelRepartidor() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transaccionesFiltradas.map((t) => {
+                  {transaccionesSemana.map((t, idx) => {
                     const tieneDesglose = t.tipo === 'INGRESO' && t.montoLiquido != null;
                     const expandida = filaExpandida === t.id;
+                    const claseFila = [idx % 2 === 1 ? 'row-odd' : '', tieneDesglose ? 'row-clickable' : ''].filter(Boolean).join(' ');
                     return (
                       <>
                         <tr
                           key={t.id}
-                          className={tieneDesglose ? 'row-clickable' : ''}
+                          className={claseFila}
                           onClick={() => tieneDesglose && toggleFila(t.id)}
                         >
                           <td>{new Date(t.fecha).toLocaleDateString()}</td>
                           <td><span className={`tag ${t.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{t.tipo}</span></td>
                           <td>
-                            {t.descripcion || '-'}
+                            {formatoDescripcionMovimiento(t)}
                             {t.observaciones && (
                               <span className="obs-dot" title="Tiene observaciones">●</span>
                             )}
@@ -950,7 +1024,7 @@ function PanelRepartidor() {
                           </td>
                         </tr>
                         {tieneDesglose && expandida && (
-                          <tr className="row-detail">
+                          <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={6}>
                               <div className="detail-badges">
                                 <span className="badge badge-neutral">
@@ -964,9 +1038,12 @@ function PanelRepartidor() {
                                 </span>
                                 {t.categoriaIngreso === 'PAQUETES' && t.cantidadPaquetes != null && (
                                   <span className="badge badge-neutral">
-                                    {t.cantidadPaquetes} entregados
-                                    {t.paquetesSobredimensionados ? ` · ${t.paquetesSobredimensionados} sobredimensionados` : ''}
-                                    {t.paquetesFallidos ? ` · ${t.paquetesFallidos} fallidos` : ''}
+                                    {t.cantidadPaquetes} entregados · {t.paquetesFallidos || 0} fallidos
+                                  </span>
+                                )}
+                                {t.categoriaIngreso === 'PAQUETES' && t.paquetesSobredimensionados != null && t.paquetesSobredimensionados > 0 && (
+                                  <span className="badge badge-neutral">
+                                    {t.paquetesSobredimensionados} Sobredimensionados
                                   </span>
                                 )}
                                 {t.categoriaIngreso === 'RETIROS' && t.cantidadPaquetes != null && (

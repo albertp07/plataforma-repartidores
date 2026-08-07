@@ -441,9 +441,17 @@
   .row-clickable {
     cursor: pointer;
   }
-  
+
   .row-clickable:hover td {
     background: #1F262B;
+  }
+
+  .row-odd td {
+    background: #171D21;
+  }
+
+  .row-odd.row-clickable:hover td {
+    background: #232B31;
   }
   
   .row-caret {
@@ -697,6 +705,44 @@
     background: rgba(255, 176, 32, 0.1);
     border-color: #FFB020;
     color: #FFB020;
+  }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .week-nav-btn {
+    background: transparent;
+    border: 1px solid #2A3238;
+    color: #A6B0B6;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+
+  .week-nav-btn:hover:not(:disabled) {
+    border-color: #3A444B;
+    color: #EDF1F3;
+  }
+
+  .week-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .week-range {
+    color: #8B98A1;
+    font-size: 12.5px;
+    font-weight: 400;
   }
 
   /* ==========================================================
