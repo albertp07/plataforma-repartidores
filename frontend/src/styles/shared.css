@@ -932,3 +932,101 @@
       width: auto;
     }
   }
+
+  /* ===== Turnos AM / PM ===== */
+  .turno-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .turno-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    background: #1B2126;
+    border: 1px solid #2A3238;
+    color: #A6B0B6;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+
+  .turno-btn:hover {
+    border-color: #3A444B;
+  }
+
+  .turno-btn.active.am {
+    border-color: #FFB020;
+    color: #FFB020;
+    background: rgba(255, 176, 32, 0.08);
+  }
+
+  .turno-btn.active.pm {
+    border-color: #A78BFA;
+    color: #A78BFA;
+    background: rgba(167, 139, 250, 0.08);
+  }
+
+  .turno-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .turno-sub {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
+  .turno-done {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ADE80;
+  }
+
+  .turno-hint {
+    font-size: 12.5px;
+    color: #FFB020;
+    margin: 8px 0 0;
+  }
+
+  .turno-nota {
+    font-size: 12px;
+    color: #8B98A1;
+  }
+
+  .tag + .tag {
+    margin-left: 6px;
+  }
+
+  .tag.turno-am {
+    color: #FFB020;
+    background: rgba(255, 176, 32, 0.12);
+  }
+
+  .tag.turno-pm {
+    color: #A78BFA;
+    background: rgba(167, 139, 250, 0.12);
+  }
+
+  .tag.turno-doble {
+    color: #A6B0B6;
+    background: rgba(166, 176, 182, 0.12);
+    margin-left: 8px;
+  }
+
+  .detalle-turnos {
+    margin: 4px 0 8px;
+  }
+
+  .celda-muted {
+    color: #5C6770;
+  }

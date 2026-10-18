@@ -1,5 +1,7 @@
 const prisma = require('../config/prisma');
 
+const TURNOS_VALIDOS = ['AM', 'PM'];
+
 // Registrar un ingreso o gasto
 async function crearTransaccion(req, res) {
   try {
@@ -7,7 +9,7 @@ async function crearTransaccion(req, res) {
       tipo, monto, descripcion, fecha, categoriaGasto, categoriaIngreso,
       montoSinDescuento, descuentoAplicado,
       cantidadPaquetes, paquetesFallidos, paquetesTotalSalida, paquetesSobredimensionados,
-      valorPaquete, montoLiquido, montoIva, observaciones, sinActividad,
+      valorPaquete, montoLiquido, montoIva, observaciones, sinActividad, turno,
     } = req.body;
 
     const esSinActividad = sinActividad === true;
@@ -19,6 +21,16 @@ async function crearTransaccion(req, res) {
 
     if (!['INGRESO', 'GASTO'].includes(tipo)) {
       return res.status(400).json({ error: 'Tipo debe ser INGRESO o GASTO' });
+    }
+
+    // Los ingresos (reparto / retiros) se registran por turno de ruta; los gastos son del día
+    if (tipo === 'INGRESO' && !TURNOS_VALIDOS.includes(turno)) {
+      return res.status(400).json({ error: 'Indica el turno de la ruta (AM o PM)' });
+    }
+
+    const fechaMovimiento = fecha ? new Date(fecha) : new Date();
+    if (Number.isNaN(fechaMovimiento.getTime())) {
+      return res.status(400).json({ error: 'Fecha inválida' });
     }
 
     if (esSinActividad) {
@@ -37,6 +49,28 @@ async function crearTransaccion(req, res) {
 
     if (!repartidor) {
       return res.status(404).json({ error: 'No tienes un perfil de repartidor creado' });
+    }
+
+    // Un repartidor no puede registrar dos veces el mismo turno (AM/PM) de la misma categoría y fecha
+    if (tipo === 'INGRESO') {
+      const dia = fechaMovimiento.toISOString().slice(0, 10);
+      const inicioDia = new Date(`${dia}T00:00:00.000Z`);
+      const finDia = new Date(inicioDia.getTime() + 24 * 60 * 60 * 1000);
+
+      const duplicado = await prisma.transaccion.findFirst({
+        where: {
+          repartidorId: repartidor.id,
+          tipo: 'INGRESO',
+          categoriaIngreso: categoriaIngreso ?? null,
+          turno,
+          fecha: { gte: inicioDia, lt: finDia },
+        },
+      });
+
+      if (duplicado) {
+        const que = categoriaIngreso === 'RETIROS' ? 'los retiros' : 'la ruta';
+        return res.status(409).json({ error: `Ya registraste ${que} del turno ${turno} para esa fecha` });
+      }
     }
 
     const transaccion = await prisma.transaccion.create({
@@ -58,6 +92,7 @@ async function crearTransaccion(req, res) {
         montoIva: montoIva ?? undefined,
         observaciones: observaciones ?? undefined,
         sinActividad: esSinActividad,
+        turno: tipo === 'INGRESO' ? turno : undefined,
         fecha: fecha ? new Date(fecha) : undefined,
       },
     });

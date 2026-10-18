@@ -10,10 +10,11 @@ import {
 import ModalConfirmar from '../components/ModalConfirmar';
 import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
+import SelectorTurno from '../components/SelectorTurno';
 import '../styles/shared.css';
 
 const IVA = 0.19;
-const VALOR_PAQUETE_DEFAULT = 1350;
+const VALOR_PAQUETE_DEFAULT = 1500;
 const VALOR_RETIRO_DEFAULT = 1500;
 
 const MODOS_INGRESO = [
@@ -76,6 +77,19 @@ function formatoDescripcionMovimiento(t) {
 
 function hoyISO() {
   return new Date().toISOString().split('T')[0];
+}
+
+// Antes de las 14:00 se asume turno AM, desde las 14:00 turno PM (el repartidor puede cambiarlo)
+const HORA_CORTE_TURNO = 14;
+
+function turnoPorDefecto() {
+  return new Date().getHours() < HORA_CORTE_TURNO ? 'AM' : 'PM';
+}
+
+// Tras guardar un turno de hoy, sugiere el otro; si era de otro día, vuelve al turno según la hora
+function siguienteTurno(actual, fechaISO) {
+  if (fechaISO === hoyISO()) return actual === 'AM' ? 'PM' : 'AM';
+  return turnoPorDefecto();
 }
 
 function isoADDMMYYYY(iso) {
@@ -185,6 +199,7 @@ function PanelRepartidor() {
   const [valorPaquete, setValorPaquete] = useState(VALOR_PAQUETE_DEFAULT);
   const [observacionesRuta, setObservacionesRuta] = useState('');
   const [sinReparto, setSinReparto] = useState(false);
+  const [turnoRuta, setTurnoRuta] = useState(turnoPorDefecto);
 
   // Ingreso: Retiros
   const [fechaRetiro, setFechaRetiro] = useState(() => isoADDMMYYYY(hoyISO()));
@@ -192,6 +207,7 @@ function PanelRepartidor() {
   const [valorRetiro, setValorRetiro] = useState(VALOR_RETIRO_DEFAULT);
   const [observacionesRetiro, setObservacionesRetiro] = useState('');
   const [sinRetiro, setSinRetiro] = useState(false);
+  const [turnoRetiro, setTurnoRetiro] = useState(turnoPorDefecto);
 
   // Gasto: categorización rápida
   const [fechaGasto, setFechaGasto] = useState(() => isoADDMMYYYY(hoyISO()));
@@ -237,6 +253,24 @@ function PanelRepartidor() {
   const totalSinDescuento = Number(montoSinDescuento) || 0;
   const descuento = Number(descuentoCombustible) || 0;
   const totalConDescuento = Math.max(totalSinDescuento - descuento, 0);
+
+  // Turnos (AM/PM) que ya tienen registro para la fecha y categoría elegidas
+  function turnosRegistrados(categoria, fechaDDMMYYYY) {
+    const iso = ddmmyyyyAISO(fechaDDMMYYYY);
+    if (!iso) return [];
+    return transacciones
+      .filter((t) => (
+        t.tipo === 'INGRESO' &&
+        t.categoriaIngreso === categoria &&
+        t.turno &&
+        new Date(t.fecha).toISOString().slice(0, 10) === iso
+      ))
+      .map((t) => t.turno);
+  }
+  const turnosRutaOcupados = turnosRegistrados('PAQUETES', fechaRuta);
+  const turnosRetiroOcupados = turnosRegistrados('RETIROS', fechaRetiro);
+  const turnoRutaOcupado = turnosRutaOcupados.includes(turnoRuta);
+  const turnoRetiroOcupado = turnosRetiroOcupados.includes(turnoRetiro);
 
   // Filtro por período
   const transaccionesFiltradas = ordenarMovimientos(transacciones.filter((t) => {
@@ -332,6 +366,11 @@ function PanelRepartidor() {
       return;
     }
 
+    if (turnoRutaOcupado) {
+      setError(`Ya registraste la ruta ${turnoRuta} de esta fecha`);
+      return;
+    }
+
     if (sinReparto) {
       const motivo = observacionesRuta.trim();
       if (!motivo) {
@@ -344,6 +383,7 @@ function PanelRepartidor() {
           tipo: 'INGRESO',
           monto: 0,
           descripcion: 'Sin reparto ese día',
+          turno: turnoRuta,
           categoriaIngreso: 'PAQUETES',
           cantidadPaquetes: 0,
           paquetesFallidos: 0,
@@ -356,6 +396,7 @@ function PanelRepartidor() {
           fecha: `${fechaISO}T12:00:00.000Z`,
         });
         setSinReparto(false);
+        setTurnoRuta(siguienteTurno(turnoRuta, fechaISO));
         setObservacionesRuta('');
         setFechaRuta(isoADDMMYYYY(hoyISO()));
         cargarTransacciones();
@@ -382,6 +423,7 @@ function PanelRepartidor() {
         tipo: 'INGRESO',
         monto: bruto,
         descripcion: descripcionRuta,
+        turno: turnoRuta,
         categoriaIngreso: 'PAQUETES',
         cantidadPaquetes: exitosas,
         paquetesFallidos: fallidas,
@@ -396,6 +438,7 @@ function PanelRepartidor() {
       setEntregasExitosas('');
       setEntregasFallidas('');
       setPaquetesSobredimensionados('');
+      setTurnoRuta(siguienteTurno(turnoRuta, fechaISO));
       setObservacionesRuta('');
       setFechaRuta(isoADDMMYYYY(hoyISO()));
       cargarTransacciones();
@@ -420,6 +463,11 @@ function PanelRepartidor() {
       return;
     }
 
+    if (turnoRetiroOcupado) {
+      setError(`Ya registraste los retiros ${turnoRetiro} de esta fecha`);
+      return;
+    }
+
     if (sinRetiro) {
       const motivo = observacionesRetiro.trim();
       if (!motivo) {
@@ -432,6 +480,7 @@ function PanelRepartidor() {
           tipo: 'INGRESO',
           monto: 0,
           descripcion: 'Sin retiros ese día',
+          turno: turnoRetiro,
           categoriaIngreso: 'RETIROS',
           cantidadPaquetes: 0,
           valorPaquete: valorRetiroUnit,
@@ -442,6 +491,7 @@ function PanelRepartidor() {
           fecha: `${fechaISO}T12:00:00.000Z`,
         });
         setSinRetiro(false);
+        setTurnoRetiro(siguienteTurno(turnoRetiro, fechaISO));
         setObservacionesRetiro('');
         setFechaRetiro(isoADDMMYYYY(hoyISO()));
         cargarTransacciones();
@@ -464,6 +514,7 @@ function PanelRepartidor() {
         tipo: 'INGRESO',
         monto: brutoRetiro,
         descripcion: `Retiros · ${retiros} colectas`,
+        turno: turnoRetiro,
         categoriaIngreso: 'RETIROS',
         cantidadPaquetes: retiros,
         valorPaquete: valorRetiroUnit,
@@ -473,6 +524,7 @@ function PanelRepartidor() {
         fecha: `${fechaISO}T12:00:00.000Z`,
       });
       setCantidadRetiros('');
+      setTurnoRetiro(siguienteTurno(turnoRetiro, fechaISO));
       setObservacionesRetiro('');
       setFechaRetiro(isoADDMMYYYY(hoyISO()));
       cargarTransacciones();
@@ -713,6 +765,16 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      <div className="field">
+                        <span className="field-label">Turno de la ruta</span>
+                        <SelectorTurno
+                          value={turnoRuta}
+                          onChange={setTurnoRuta}
+                          ocupados={turnosRutaOcupados}
+                          etiqueta="la ruta"
+                        />
+                      </div>
+
                       <button
                         type="button"
                         className={`btn-sin-actividad ${sinReparto ? 'active' : ''}`}
@@ -818,7 +880,7 @@ function PanelRepartidor() {
                       </div>
                       )}
 
-                      <button type="submit" className="btn-primary" disabled={guardando}>
+                      <button type="submit" className="btn-primary" disabled={guardando || turnoRutaOcupado}>
                         {guardando ? 'Guardando...' : sinReparto ? 'Registrar día sin reparto' : 'Guardar ruta'}
                       </button>
                     </form>
@@ -831,6 +893,16 @@ function PanelRepartidor() {
                           value={fechaRetiro}
                           onChange={setFechaRetiro}
                           required
+                        />
+                      </div>
+
+                      <div className="field">
+                        <span className="field-label">Turno del retiro</span>
+                        <SelectorTurno
+                          value={turnoRetiro}
+                          onChange={setTurnoRetiro}
+                          ocupados={turnosRetiroOcupados}
+                          etiqueta="los retiros"
                         />
                       </div>
 
@@ -907,7 +979,7 @@ function PanelRepartidor() {
                       </div>
                       )}
 
-                      <button type="submit" className="btn-primary" disabled={guardando}>
+                      <button type="submit" className="btn-primary" disabled={guardando || turnoRetiroOcupado}>
                         {guardando ? 'Guardando...' : sinRetiro ? 'Registrar día sin retiro' : 'Guardar retiro'}
                       </button>
                     </form>
@@ -1114,7 +1186,10 @@ function PanelRepartidor() {
                           onClick={() => tieneDesglose && toggleFila(t.id)}
                         >
                           <td>{new Date(t.fecha).toLocaleDateString()}</td>
-                          <td><span className={`tag ${etiquetaTipo(t).clase}`}>{etiquetaTipo(t).texto}</span></td>
+                          <td>
+                            <span className={`tag ${etiquetaTipo(t).clase}`}>{etiquetaTipo(t).texto}</span>
+                            {t.turno && <span className={`tag turno-${t.turno.toLowerCase()}`}>{t.turno}</span>}
+                          </td>
                           <td>
                             {formatoDescripcionMovimiento(t)}
                             {t.observaciones && (

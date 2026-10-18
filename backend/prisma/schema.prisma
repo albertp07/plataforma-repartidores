@@ -66,10 +66,17 @@ model Transaccion {
   montoIva            Decimal?        @db.Decimal(10, 2)
   observaciones       String?
   sinActividad        Boolean         @default(false)
+  turno               Turno?
   fecha               DateTime        @default(now())
 }
 
 enum TipoTransaccion {
   INGRESO
   GASTO
+}
+
+// Turno de la ruta (solo ingresos): AM = mañana, PM = tarde
+enum Turno {
+  AM
+  PM
 }

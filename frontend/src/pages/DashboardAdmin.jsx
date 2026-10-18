@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { obtenerTodasLasTransacciones, eliminarTransaccion } from '../services/transaccionService';
@@ -25,6 +25,12 @@ const PERIODOS = [
   { id: 'RANGO', label: 'Rango de fechas' },
 ];
 
+const TURNOS_FILTRO = [
+  { id: 'TODOS', label: 'Todos los turnos' },
+  { id: 'AM', label: 'Turno AM' },
+  { id: 'PM', label: 'Turno PM' },
+];
+
 const TABS = [
   { id: 'RESUMEN', label: 'Resumen' },
   { id: 'PENDIENTES', label: 'Solicitudes Pendientes' },
@@ -48,6 +54,17 @@ function ordenarMovimientos(lista) {
     if (diaA !== diaB) return diaA < diaB ? 1 : -1;
     return ordenTipoMovimiento(a) - ordenTipoMovimiento(b);
   });
+}
+
+function formatoDia(iso) {
+  return new Date(`${iso}T12:00:00.000Z`).toLocaleDateString();
+}
+
+// Texto de la celda AM/PM del detalle diario de un repartidor
+function textoCeldaTurno(dia, turno) {
+  if (dia.activos[turno]) return `$${formatoPeso(dia[turno])}`;
+  if (dia.sinActividad[turno]) return 'Sin actividad';
+  return '—';
 }
 
 function etiquetaTipo(t) {
@@ -135,6 +152,8 @@ function DashboardAdmin() {
   const [transaccionAEliminar, setTransaccionAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [filaExpandida, setFilaExpandida] = useState(null);
+  const [filtroTurno, setFiltroTurno] = useState('TODOS');
+  const [repartidorExpandido, setRepartidorExpandido] = useState(null);
   const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
 
   const [pendientes, setPendientes] = useState([]);
@@ -272,6 +291,11 @@ function DashboardAdmin() {
     return fecha >= inicioSemanaVista && fecha <= finSemanaVista;
   });
 
+  // El filtro por turno aplica solo a ingresos (los gastos no se asignan a un turno)
+  const movimientosVista = filtroTurno === 'TODOS'
+    ? movimientosSemana
+    : movimientosSemana.filter((m) => m.turno === filtroTurno);
+
   // Resumen general (recalculado según el período)
   const totalIngresos = movimientosFiltrados
     .filter((m) => m.tipo === 'INGRESO')
@@ -303,6 +327,37 @@ function DashboardAdmin() {
     ...r,
     balance: r.totalIngresos - r.totalGastos,
   }));
+
+  // Detalle por repartidor y día, con los ingresos separados por turno (AM / PM)
+  const detalleDiasMap = {};
+  movimientosFiltrados.forEach((m) => {
+    const id = m.repartidorId;
+    const key = new Date(m.fecha).toISOString().split('T')[0];
+    if (!detalleDiasMap[id]) detalleDiasMap[id] = {};
+    if (!detalleDiasMap[id][key]) {
+      detalleDiasMap[id][key] = {
+        fecha: key,
+        AM: 0,
+        PM: 0,
+        SIN: 0,
+        gastos: 0,
+        activos: { AM: false, PM: false },
+        sinActividad: { AM: false, PM: false },
+      };
+    }
+    const dia = detalleDiasMap[id][key];
+    if (m.tipo === 'GASTO') {
+      dia.gastos += Number(m.monto);
+      return;
+    }
+    dia[m.turno || 'SIN'] += Number(m.monto);
+    if (m.turno) {
+      if (m.sinActividad) dia.sinActividad[m.turno] = true;
+      else dia.activos[m.turno] = true;
+    }
+  });
+  const detalleDias = (repartidorId) =>
+    Object.values(detalleDiasMap[repartidorId] || {}).sort((a, b) => b.fecha.localeCompare(a.fecha));
 
   // Movimientos por fecha (recalculado según el período)
   const porFechaMap = {};
@@ -503,22 +558,81 @@ function DashboardAdmin() {
                   <th>Gastos</th>
                   <th>Balance</th>
                   <th>Movimientos</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {porRepartidor.length === 0 ? (
-                  <tr><td colSpan={6} className="empty-state">Sin movimientos en este período.</td></tr>
+                  <tr><td colSpan={7} className="empty-state">Sin movimientos en este período.</td></tr>
                 ) : (
-                  porRepartidor.map((r) => (
-                    <tr key={r.repartidorId}>
-                      <td>{r.nombre}</td>
-                      <td>{r.email}</td>
-                      <td>${formatoPeso(r.totalIngresos)}</td>
-                      <td>${formatoPeso(r.totalGastos)}</td>
-                      <td>${formatoPeso(r.balance)}</td>
-                      <td>{r.cantidadTransacciones}</td>
-                    </tr>
-                  ))
+                  porRepartidor.map((r) => {
+                    const dias = detalleDias(r.repartidorId);
+                    const diasDobles = dias.filter((d) => d.activos.AM && d.activos.PM).length;
+                    const tieneSinTurno = dias.some((d) => d.SIN > 0);
+                    const abierto = repartidorExpandido === r.repartidorId;
+                    return (
+                      <Fragment key={r.repartidorId}>
+                        <tr
+                          className="row-clickable"
+                          onClick={() => setRepartidorExpandido(abierto ? null : r.repartidorId)}
+                        >
+                          <td>
+                            {r.nombre}
+                            {diasDobles > 0 && (
+                              <span className="tag turno-doble" title="Días en que hizo ruta AM y PM">
+                                AM+PM · {diasDobles}
+                              </span>
+                            )}
+                          </td>
+                          <td>{r.email}</td>
+                          <td>${formatoPeso(r.totalIngresos)}</td>
+                          <td>${formatoPeso(r.totalGastos)}</td>
+                          <td>${formatoPeso(r.balance)}</td>
+                          <td>{r.cantidadTransacciones}</td>
+                          <td><span className={`row-caret ${abierto ? 'open' : ''}`}>▾</span></td>
+                        </tr>
+                        {abierto && (
+                          <tr className="row-detail">
+                            <td colSpan={7}>
+                              <table className="data-table detalle-turnos">
+                                <thead>
+                                  <tr>
+                                    <th>Fecha</th>
+                                    <th>Ruta AM</th>
+                                    <th>Ruta PM</th>
+                                    {tieneSinTurno && <th>Sin turno</th>}
+                                    <th>Total ingresos</th>
+                                    <th>Gastos</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {dias.map((d) => (
+                                    <tr key={d.fecha}>
+                                      <td>
+                                        {formatoDia(d.fecha)}
+                                        {d.activos.AM && d.activos.PM && (
+                                          <span className="tag turno-doble">AM+PM</span>
+                                        )}
+                                      </td>
+                                      <td className={d.activos.AM ? '' : 'celda-muted'}>{textoCeldaTurno(d, 'AM')}</td>
+                                      <td className={d.activos.PM ? '' : 'celda-muted'}>{textoCeldaTurno(d, 'PM')}</td>
+                                      {tieneSinTurno && (
+                                        <td className={d.SIN > 0 ? '' : 'celda-muted'}>
+                                          {d.SIN > 0 ? `$${formatoPeso(d.SIN)}` : '—'}
+                                        </td>
+                                      )}
+                                      <td>${formatoPeso(d.AM + d.PM + d.SIN)}</td>
+                                      <td>{d.gastos > 0 ? `$${formatoPeso(d.gastos)}` : '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -542,6 +656,21 @@ function DashboardAdmin() {
                   Rango de fechas
                 </button>
               </div>
+              <div className="period-selector" style={{ margin: 0 }} role="group" aria-label="Filtrar por turno">
+                {TURNOS_FILTRO.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`period-btn ${filtroTurno === f.id ? 'active' : ''}`}
+                    onClick={() => setFiltroTurno(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              {filtroTurno !== 'TODOS' && (
+                <span className="turno-nota">Los gastos no se asignan a un turno.</span>
+              )}
               {modoMovimientos === 'SEMANA' && (
                 <div className="week-nav">
                   <button
@@ -602,7 +731,7 @@ function DashboardAdmin() {
                 )}
               </div>
             )}
-            {movimientosSemana.length === 0 ? (
+            {movimientosVista.length === 0 ? (
               <p className="empty-state">{modoMovimientos === 'RANGO' ? 'No hay movimientos en el rango seleccionado.' : 'No hay movimientos en esta semana.'}</p>
             ) : (
               <div className="table-container">
@@ -619,7 +748,7 @@ function DashboardAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ordenarMovimientos(movimientosSemana).map((m, idx) => {
+                  {ordenarMovimientos(movimientosVista).map((m, idx) => {
                     const tieneDesglose = m.tipo === 'INGRESO' && m.montoLiquido != null;
                     const expandida = filaExpandida === m.id;
                     const claseFila = [idx % 2 === 1 ? 'row-odd' : '', tieneDesglose ? 'row-clickable' : ''].filter(Boolean).join(' ');
@@ -632,7 +761,10 @@ function DashboardAdmin() {
                         >
                           <td>{new Date(m.fecha).toLocaleDateString()}</td>
                           <td>{m.repartidor.usuario.nombre}</td>
-                          <td><span className={`tag ${etiquetaTipo(m).clase}`}>{etiquetaTipo(m).texto}</span></td>
+                          <td>
+                            <span className={`tag ${etiquetaTipo(m).clase}`}>{etiquetaTipo(m).texto}</span>
+                            {m.turno && <span className={`tag turno-${m.turno.toLowerCase()}`}>{m.turno}</span>}
+                          </td>
                           <td>
                             {formatoDescripcionMovimiento(m)}
                             {m.observaciones && (
