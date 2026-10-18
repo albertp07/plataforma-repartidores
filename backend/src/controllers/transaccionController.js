@@ -7,15 +7,30 @@ async function crearTransaccion(req, res) {
       tipo, monto, descripcion, fecha, categoriaGasto, categoriaIngreso,
       montoSinDescuento, descuentoAplicado,
       cantidadPaquetes, paquetesFallidos, paquetesTotalSalida, paquetesSobredimensionados,
-      valorPaquete, montoLiquido, montoIva, observaciones,
+      valorPaquete, montoLiquido, montoIva, observaciones, sinActividad,
     } = req.body;
 
-    if (!tipo || !monto) {
+    const esSinActividad = sinActividad === true;
+
+    // Un día sin reparto/retiro se registra con monto 0, por eso no se puede validar con !monto
+    if (!tipo || monto === undefined || monto === null || (!esSinActividad && !monto)) {
       return res.status(400).json({ error: 'Tipo y monto son obligatorios' });
     }
 
     if (!['INGRESO', 'GASTO'].includes(tipo)) {
       return res.status(400).json({ error: 'Tipo debe ser INGRESO o GASTO' });
+    }
+
+    if (esSinActividad) {
+      if (tipo !== 'INGRESO' || !['PAQUETES', 'RETIROS'].includes(categoriaIngreso)) {
+        return res.status(400).json({ error: 'Un día sin actividad solo aplica a ingresos de reparto o retiros' });
+      }
+      if (!observaciones || !String(observaciones).trim()) {
+        return res.status(400).json({ error: 'Indica el motivo en observaciones' });
+      }
+      if (Number(monto) !== 0) {
+        return res.status(400).json({ error: 'Un día sin actividad debe tener monto 0' });
+      }
     }
 
     const repartidor = await prisma.repartidor.findUnique({ where: { usuarioId: req.usuario.id } });
@@ -42,6 +57,7 @@ async function crearTransaccion(req, res) {
         montoLiquido: montoLiquido ?? undefined,
         montoIva: montoIva ?? undefined,
         observaciones: observaciones ?? undefined,
+        sinActividad: esSinActividad,
         fecha: fecha ? new Date(fecha) : undefined,
       },
     });

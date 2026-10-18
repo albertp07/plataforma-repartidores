@@ -65,6 +65,7 @@ model Transaccion {
   montoLiquido        Decimal?        @db.Decimal(10, 2)
   montoIva            Decimal?        @db.Decimal(10, 2)
   observaciones       String?
+  sinActividad        Boolean         @default(false)
   fecha               DateTime        @default(now())
 }
 

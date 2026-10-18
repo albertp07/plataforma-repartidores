@@ -50,7 +50,15 @@ function ordenarMovimientos(lista) {
   });
 }
 
+function etiquetaTipo(t) {
+  if (t.sinActividad) {
+    return { clase: 'sin-actividad', texto: t.categoriaIngreso === 'RETIROS' ? 'SIN RETIRO' : 'SIN REPARTO' };
+  }
+  return { clase: t.tipo === 'INGRESO' ? 'ingreso' : 'gasto', texto: t.tipo };
+}
+
 function formatoDescripcionMovimiento(m) {
+  if (m.sinActividad) return m.descripcion || 'Sin actividad';
   if (m.categoriaIngreso !== 'PAQUETES' || m.cantidadPaquetes == null) {
     return m.descripcion || '-';
   }
@@ -624,7 +632,7 @@ function DashboardAdmin() {
                         >
                           <td>{new Date(m.fecha).toLocaleDateString()}</td>
                           <td>{m.repartidor.usuario.nombre}</td>
-                          <td><span className={`tag ${m.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{m.tipo}</span></td>
+                          <td><span className={`tag ${etiquetaTipo(m).clase}`}>{etiquetaTipo(m).texto}</span></td>
                           <td>
                             {formatoDescripcionMovimiento(m)}
                             {m.observaciones && (
@@ -661,6 +669,10 @@ function DashboardAdmin() {
                           <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={7}>
                               <div className="detail-badges">
+                                  {m.sinActividad ? (
+                                    <span className="badge badge-sky">Sin actividad ese día</span>
+                                  ) : (
+                                    <>
                                 <span className="badge badge-neutral">
                                   Líquido: ${formatoPeso(m.montoLiquido)}
                                 </span>
@@ -680,7 +692,9 @@ function DashboardAdmin() {
                                     {m.paquetesSobredimensionados} Sobredimensionados
                                   </span>
                                 )}
-                              </div>
+                                    </>
+                                  )}
+                                </div>
                               {m.observaciones && (
                                 <p className="detail-note">{m.observaciones}</p>
                               )}

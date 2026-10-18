@@ -55,7 +55,15 @@ function ordenarMovimientos(lista) {
   });
 }
 
+function etiquetaTipo(t) {
+  if (t.sinActividad) {
+    return { clase: 'sin-actividad', texto: t.categoriaIngreso === 'RETIROS' ? 'SIN RETIRO' : 'SIN REPARTO' };
+  }
+  return { clase: t.tipo === 'INGRESO' ? 'ingreso' : 'gasto', texto: t.tipo };
+}
+
 function formatoDescripcionMovimiento(t) {
+  if (t.sinActividad) return t.descripcion || 'Sin actividad';
   if (t.categoriaIngreso !== 'PAQUETES' || t.cantidadPaquetes == null) {
     return t.descripcion || '-';
   }
@@ -176,12 +184,14 @@ function PanelRepartidor() {
   const [paquetesSobredimensionados, setPaquetesSobredimensionados] = useState('');
   const [valorPaquete, setValorPaquete] = useState(VALOR_PAQUETE_DEFAULT);
   const [observacionesRuta, setObservacionesRuta] = useState('');
+  const [sinReparto, setSinReparto] = useState(false);
 
   // Ingreso: Retiros
   const [fechaRetiro, setFechaRetiro] = useState(() => isoADDMMYYYY(hoyISO()));
   const [cantidadRetiros, setCantidadRetiros] = useState('');
   const [valorRetiro, setValorRetiro] = useState(VALOR_RETIRO_DEFAULT);
   const [observacionesRetiro, setObservacionesRetiro] = useState('');
+  const [sinRetiro, setSinRetiro] = useState(false);
 
   // Gasto: categorización rápida
   const [fechaGasto, setFechaGasto] = useState(() => isoADDMMYYYY(hoyISO()));
@@ -322,6 +332,41 @@ function PanelRepartidor() {
       return;
     }
 
+    if (sinReparto) {
+      const motivo = observacionesRuta.trim();
+      if (!motivo) {
+        setError('Indica en observaciones por qué no se repartió ese día');
+        return;
+      }
+      setGuardando(true);
+      try {
+        await crearTransaccion({
+          tipo: 'INGRESO',
+          monto: 0,
+          descripcion: 'Sin reparto ese día',
+          categoriaIngreso: 'PAQUETES',
+          cantidadPaquetes: 0,
+          paquetesFallidos: 0,
+          paquetesTotalSalida: 0,
+          valorPaquete: valorUnitario,
+          montoLiquido: 0,
+          montoIva: 0,
+          sinActividad: true,
+          observaciones: motivo,
+          fecha: `${fechaISO}T12:00:00.000Z`,
+        });
+        setSinReparto(false);
+        setObservacionesRuta('');
+        setFechaRuta(isoADDMMYYYY(hoyISO()));
+        cargarTransacciones();
+      } catch (err) {
+        setError(err.response?.data?.error || 'Error al registrar el día sin reparto');
+      } finally {
+        setGuardando(false);
+      }
+      return;
+    }
+
     if (totalSalida <= 0) {
       setError('Ingresa al menos una entrega (exitosa o fallida)');
       return;
@@ -372,6 +417,39 @@ function PanelRepartidor() {
     }
     if (fechaISO > hoyISO()) {
       setError('La fecha no puede ser futura');
+      return;
+    }
+
+    if (sinRetiro) {
+      const motivo = observacionesRetiro.trim();
+      if (!motivo) {
+        setError('Indica en observaciones por qué no se hizo retiro ese día');
+        return;
+      }
+      setGuardando(true);
+      try {
+        await crearTransaccion({
+          tipo: 'INGRESO',
+          monto: 0,
+          descripcion: 'Sin retiros ese día',
+          categoriaIngreso: 'RETIROS',
+          cantidadPaquetes: 0,
+          valorPaquete: valorRetiroUnit,
+          montoLiquido: 0,
+          montoIva: 0,
+          sinActividad: true,
+          observaciones: motivo,
+          fecha: `${fechaISO}T12:00:00.000Z`,
+        });
+        setSinRetiro(false);
+        setObservacionesRetiro('');
+        setFechaRetiro(isoADDMMYYYY(hoyISO()));
+        cargarTransacciones();
+      } catch (err) {
+        setError(err.response?.data?.error || 'Error al registrar el día sin retiro');
+      } finally {
+        setGuardando(false);
+      }
       return;
     }
 
@@ -635,6 +713,21 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      <button
+                        type="button"
+                        className={`btn-sin-actividad ${sinReparto ? 'active' : ''}`}
+                        onClick={() => { setSinReparto((v) => !v); setError(''); }}
+                        aria-pressed={sinReparto}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M5.6 5.6l12.8 12.8" />
+                          </svg>
+                        No se repartió ese día
+                      </button>
+
+                      {!sinReparto && (
+                      <>
                       <div className="field-row">
                         <div className="field">
                           <span className="field-label">Entregas exitosas</span>
@@ -685,17 +778,24 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      </>
+                      )}
+
                       <div className="field">
-                        <span className="field-label">Observaciones (opcional)</span>
+                        <span className="field-label">
+                          {sinReparto ? 'Motivo (obligatorio)' : 'Observaciones (opcional)'}
+                        </span>
                         <textarea
                           rows="3"
                           maxLength={500}
+                          required={sinReparto}
                           value={observacionesRuta}
                           onChange={(e) => setObservacionesRuta(e.target.value)}
-                          placeholder="Ej: 5 paquetes hechos en la mañana"
+                          placeholder={sinReparto ? 'Ej: Furgón en mantención, día libre, sin carga asignada' : 'Ej: 5 paquetes hechos en la mañana'}
                         />
                       </div>
 
+                      {!sinReparto && (
                       <div className="calc-summary">
                         <div className="calc-row">
                           <span>Paquetes totales al salir</span>
@@ -716,9 +816,10 @@ function PanelRepartidor() {
                           <span>${formatoPeso(bruto)}</span>
                         </div>
                       </div>
+                      )}
 
                       <button type="submit" className="btn-primary" disabled={guardando}>
-                        {guardando ? 'Guardando...' : 'Guardar ruta'}
+                        {guardando ? 'Guardando...' : sinReparto ? 'Registrar día sin reparto' : 'Guardar ruta'}
                       </button>
                     </form>
                   ) : (
@@ -733,6 +834,21 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      <button
+                        type="button"
+                        className={`btn-sin-actividad ${sinRetiro ? 'active' : ''}`}
+                        onClick={() => { setSinRetiro((v) => !v); setError(''); }}
+                        aria-pressed={sinRetiro}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M5.6 5.6l12.8 12.8" />
+                          </svg>
+                        No se hizo retiro ese día
+                      </button>
+
+                      {!sinRetiro && (
+                      <>
                       <div className="field">
                         <span className="field-label">Cantidad de retiros</span>
                         <input
@@ -757,17 +873,24 @@ function PanelRepartidor() {
                         />
                       </div>
 
+                      </>
+                      )}
+
                       <div className="field">
-                        <span className="field-label">Observaciones (opcional)</span>
+                        <span className="field-label">
+                          {sinRetiro ? 'Motivo (obligatorio)' : 'Observaciones (opcional)'}
+                        </span>
                         <textarea
                           rows="3"
                           maxLength={500}
+                          required={sinRetiro}
                           value={observacionesRetiro}
                           onChange={(e) => setObservacionesRetiro(e.target.value)}
-                          placeholder="Ej: Retiros hechos en la mañana"
+                          placeholder={sinRetiro ? 'Ej: No había retiros programados, tienda cerrada' : 'Ej: Retiros hechos en la mañana'}
                         />
                       </div>
 
+                      {!sinRetiro && (
                       <div className="calc-summary">
                         <div className="calc-row">
                           <span>Líquido ({retiros} × ${formatoPeso(valorRetiroUnit)})</span>
@@ -782,9 +905,10 @@ function PanelRepartidor() {
                           <span>${formatoPeso(brutoRetiro)}</span>
                         </div>
                       </div>
+                      )}
 
                       <button type="submit" className="btn-primary" disabled={guardando}>
-                        {guardando ? 'Guardando...' : 'Guardar retiro'}
+                        {guardando ? 'Guardando...' : sinRetiro ? 'Registrar día sin retiro' : 'Guardar retiro'}
                       </button>
                     </form>
                   )}
@@ -990,7 +1114,7 @@ function PanelRepartidor() {
                           onClick={() => tieneDesglose && toggleFila(t.id)}
                         >
                           <td>{new Date(t.fecha).toLocaleDateString()}</td>
-                          <td><span className={`tag ${t.tipo === 'INGRESO' ? 'ingreso' : 'gasto'}`}>{t.tipo}</span></td>
+                          <td><span className={`tag ${etiquetaTipo(t).clase}`}>{etiquetaTipo(t).texto}</span></td>
                           <td>
                             {formatoDescripcionMovimiento(t)}
                             {t.observaciones && (
@@ -1027,6 +1151,10 @@ function PanelRepartidor() {
                           <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={6}>
                               <div className="detail-badges">
+                                  {t.sinActividad ? (
+                                    <span className="badge badge-sky">Sin actividad ese día</span>
+                                  ) : (
+                                    <>
                                 <span className="badge badge-neutral">
                                   Líquido: ${formatoPeso(t.montoLiquido)}
                                 </span>
@@ -1051,7 +1179,9 @@ function PanelRepartidor() {
                                     {t.cantidadPaquetes} retiros
                                   </span>
                                 )}
-                              </div>
+                                    </>
+                                  )}
+                                </div>
                               {t.observaciones && (
                                 <p className="detail-note">{t.observaciones}</p>
                               )}
