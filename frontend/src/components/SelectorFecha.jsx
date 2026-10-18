@@ -42,7 +42,7 @@ function mismoDia(a, b) {
     && a.getDate() === b.getDate();
 }
 
-function SelectorFecha({ value, onChange, id, maxDate, required }) {
+function SelectorFecha({ value, onChange, id, maxDate, minDate, required, placeholder = 'DD-MM-AAAA' }) {
   const [abierto, setAbierto] = useState(false);
   const fechaValida = parseDDMMYYYY(value);
   const [mesVisible, setMesVisible] = useState(() => fechaValida || new Date());
@@ -79,7 +79,7 @@ function SelectorFecha({ value, onChange, id, maxDate, required }) {
   }
 
   function handleSeleccionarDia(dia) {
-    if (dia > limite) return;
+    if (dia > limite || (minDate && dia < minDate)) return;
     onChange(formatoDDMMYYYY(dia));
     setAbierto(false);
   }
@@ -105,7 +105,7 @@ function SelectorFecha({ value, onChange, id, maxDate, required }) {
           id={id}
           type="text"
           inputMode="numeric"
-          placeholder="DD-MM-AAAA"
+          placeholder={placeholder}
           value={value}
           onChange={handleInputChange}
           onFocus={abrirPopover}
@@ -154,7 +154,7 @@ function SelectorFecha({ value, onChange, id, maxDate, required }) {
           <div className="date-grid">
             {celdas.map((dia, i) => {
               if (!dia) return <span key={i} />;
-              const deshabilitado = dia > limite;
+              const deshabilitado = dia > limite || (!!minDate && dia < minDate);
               const seleccionado = mismoDia(dia, fechaValida);
               const esHoy = mismoDia(dia, hoy);
               return (

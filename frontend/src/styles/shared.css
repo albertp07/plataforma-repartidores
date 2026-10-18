@@ -863,3 +863,34 @@
       white-space: nowrap;
     }
   }
+
+  /* Filtro de rango de fechas (dashboard admin) */
+  .range-filter {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .range-field {
+    margin-bottom: 0;
+    width: 170px;
+  }
+
+  .range-clear {
+    margin-bottom: 0;
+  }
+
+  .range-error {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
+    .range-field {
+      flex: 1;
+      min-width: 130px;
+      width: auto;
+    }
+  }

@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { obtenerTodasLasTransacciones, eliminarTransaccion } from '../services/transaccionService';
 import { obtenerUsuariosPendientes, actualizarEstadoUsuario } from '../services/usuarioService';
 import ModalConfirmar from '../components/ModalConfirmar';
+import SelectorFecha from '../components/SelectorFecha';
 import {
-  BarChart, Bar, LineChart, Line,
+  LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import '../styles/shared.css';
@@ -21,6 +22,7 @@ const PERIODOS = [
   { id: 'TODO', label: 'Todo' },
   { id: 'SEMANA', label: 'Esta semana' },
   { id: 'MES', label: 'Este mes' },
+  { id: 'RANGO', label: 'Rango de fechas' },
 ];
 
 const TABS = [
@@ -57,6 +59,22 @@ function formatoDescripcionMovimiento(m) {
   if (m.paquetesFallidos) partes.push(`${m.paquetesFallidos} fallidas`);
   const total = m.paquetesTotalSalida ?? (m.cantidadPaquetes + (m.paquetesFallidos || 0));
   return `Reparto · ${partes.join(' / ')} de ${total} totales`;
+}
+
+// Convierte "DD-MM-AAAA" en Date local (00:00) o null si no es una fecha válida
+function parseDDMMYYYY(texto) {
+  const match = (texto || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!match) return null;
+  const [, d, m, y] = match;
+  const fecha = new Date(Number(y), Number(m) - 1, Number(d));
+  if (
+    fecha.getFullYear() !== Number(y) ||
+    fecha.getMonth() !== Number(m) - 1 ||
+    fecha.getDate() !== Number(d)
+  ) {
+    return null;
+  }
+  return fecha;
 }
 
 function inicioSemanaActual() {
@@ -100,6 +118,11 @@ function DashboardAdmin() {
   const [cargando, setCargando] = useState(true);
   const [periodo, setPeriodo] = useState('TODO');
   const [semanaOffset, setSemanaOffset] = useState(0);
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [modoMovimientos, setModoMovimientos] = useState('SEMANA');
+  const [movDesde, setMovDesde] = useState('');
+  const [movHasta, setMovHasta] = useState('');
 
   const [transaccionAEliminar, setTransaccionAEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
@@ -198,18 +221,46 @@ function DashboardAdmin() {
     }
   }
 
-  // Filtro por período
+  // Filtro por período (incluye rango personalizado desde/hasta, ambos días inclusive)
+  const desdeDate = parseDDMMYYYY(fechaDesde);
+  const hastaDate = parseDDMMYYYY(fechaHasta);
+  const rangoInvalido = !!desdeDate && !!hastaDate && desdeDate > hastaDate;
+
   const movimientosFiltrados = movimientos.filter((m) => {
     if (periodo === 'TODO') return true;
     const fecha = new Date(m.fecha);
+    if (periodo === 'RANGO') {
+      if (rangoInvalido) return false;
+      if (desdeDate && fecha < desdeDate) return false;
+      if (hastaDate) {
+        const finDia = new Date(hastaDate);
+        finDia.setHours(23, 59, 59, 999);
+        if (fecha > finDia) return false;
+      }
+      return true;
+    }
     const limite = periodo === 'SEMANA' ? inicioSemanaActual() : inicioMesActual();
     return fecha >= limite;
   });
 
   // "Todos los movimientos": navegación semana por semana (lunes a domingo), independiente del filtro de período
   const { inicio: inicioSemanaVista, fin: finSemanaVista } = rangoSemana(semanaOffset);
+  const movDesdeDate = parseDDMMYYYY(movDesde);
+  const movHastaDate = parseDDMMYYYY(movHasta);
+  const movRangoInvalido = !!movDesdeDate && !!movHastaDate && movDesdeDate > movHastaDate;
+
   const movimientosSemana = movimientos.filter((m) => {
     const fecha = new Date(m.fecha);
+    if (modoMovimientos === 'RANGO') {
+      if (movRangoInvalido) return false;
+      if (movDesdeDate && fecha < movDesdeDate) return false;
+      if (movHastaDate) {
+        const finDia = new Date(movHastaDate);
+        finDia.setHours(23, 59, 59, 999);
+        if (fecha > finDia) return false;
+      }
+      return true;
+    }
     return fecha >= inicioSemanaVista && fecha <= finSemanaVista;
   });
 
@@ -362,6 +413,43 @@ function DashboardAdmin() {
               ))}
             </div>
 
+            {periodo === 'RANGO' && (
+              <div className="range-filter">
+                <div className="field range-field">
+                  <label className="field-label" htmlFor="filtro-desde">Desde</label>
+                  <SelectorFecha
+                    id="filtro-desde"
+                    value={fechaDesde}
+                    onChange={setFechaDesde}
+                    maxDate={hastaDate && !rangoInvalido ? hastaDate : undefined}
+                  />
+                </div>
+                <div className="field range-field">
+                  <label className="field-label" htmlFor="filtro-hasta">Hasta</label>
+                  <SelectorFecha
+                    id="filtro-hasta"
+                    value={fechaHasta}
+                    onChange={setFechaHasta}
+                    minDate={desdeDate || undefined}
+                  />
+                </div>
+                {(fechaDesde || fechaHasta) && (
+                  <button
+                    type="button"
+                    className="btn-ghost range-clear"
+                    onClick={() => { setFechaDesde(''); setFechaHasta(''); }}
+                  >
+                    Limpiar
+                  </button>
+                )}
+                {rangoInvalido && (
+                  <p className="login-error range-error" role="alert">
+                    La fecha "Desde" no puede ser posterior a "Hasta".
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="stat-grid">
               <div className="stat-card green">
                 <p className="stat-label">Ingresos totales</p>
@@ -393,21 +481,6 @@ function DashboardAdmin() {
                   <Line type="monotone" dataKey="ingresos" stroke="#4ADE80" name="Ingresos" strokeWidth={2} />
                   <Line type="monotone" dataKey="gastos" stroke="#FF7A6E" name="Gastos" strokeWidth={2} />
                 </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <p className="section-title">Balance por repartidor</p>
-            <div className="chart-wrap">
-              <ResponsiveContainer>
-                <BarChart data={porRepartidor}>
-                  <CartesianGrid stroke="#2A3238" strokeDasharray="3 3" />
-                  <XAxis dataKey="nombre" stroke="#8B98A1" fontSize={12} />
-                  <YAxis stroke="#8B98A1" fontSize={12} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: '13px' }} />
-                  <Bar dataKey="totalIngresos" fill="#4ADE80" name="Ingresos" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="totalGastos" fill="#FF7A6E" name="Gastos" radius={[4, 4, 0, 0]} />
-                </BarChart>
               </ResponsiveContainer>
             </div>
 
@@ -445,29 +518,84 @@ function DashboardAdmin() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '28px', marginBottom: '14px' }}>
               <p className="section-title" style={{ margin: 0 }}>Todos los movimientos</p>
-              <div className="week-nav">
+              <div className="period-selector" style={{ margin: 0 }}>
                 <button
                   type="button"
-                  className="week-nav-btn"
-                  onClick={() => setSemanaOffset((o) => o + 1)}
-                  aria-label="Semana anterior"
+                  className={`period-btn ${modoMovimientos === 'SEMANA' ? 'active' : ''}`}
+                  onClick={() => setModoMovimientos('SEMANA')}
                 >
-                  ‹
+                  Por semana
                 </button>
-                <span className="week-range">{formatoRangoSemana(semanaOffset)}</span>
                 <button
                   type="button"
-                  className="week-nav-btn"
-                  onClick={() => setSemanaOffset((o) => Math.max(o - 1, 0))}
-                  disabled={semanaOffset === 0}
-                  aria-label="Semana siguiente"
+                  className={`period-btn ${modoMovimientos === 'RANGO' ? 'active' : ''}`}
+                  onClick={() => setModoMovimientos('RANGO')}
                 >
-                  ›
+                  Rango de fechas
                 </button>
               </div>
+              {modoMovimientos === 'SEMANA' && (
+                <div className="week-nav">
+                  <button
+                    type="button"
+                    className="week-nav-btn"
+                    onClick={() => setSemanaOffset((o) => o + 1)}
+                    aria-label="Semana anterior"
+                  >
+                    ‹
+                  </button>
+                  <span className="week-range">{formatoRangoSemana(semanaOffset)}</span>
+                  <button
+                    type="button"
+                    className="week-nav-btn"
+                    onClick={() => setSemanaOffset((o) => Math.max(o - 1, 0))}
+                    disabled={semanaOffset === 0}
+                    aria-label="Semana siguiente"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
+
+            {modoMovimientos === 'RANGO' && (
+              <div className="range-filter">
+                <div className="field range-field">
+                  <label className="field-label" htmlFor="mov-desde">Desde</label>
+                  <SelectorFecha
+                    id="mov-desde"
+                    value={movDesde}
+                    onChange={setMovDesde}
+                    maxDate={movHastaDate && !movRangoInvalido ? movHastaDate : undefined}
+                  />
+                </div>
+                <div className="field range-field">
+                  <label className="field-label" htmlFor="mov-hasta">Hasta</label>
+                  <SelectorFecha
+                    id="mov-hasta"
+                    value={movHasta}
+                    onChange={setMovHasta}
+                    minDate={movDesdeDate || undefined}
+                  />
+                </div>
+                {(movDesde || movHasta) && (
+                  <button
+                    type="button"
+                    className="btn-ghost range-clear"
+                    onClick={() => { setMovDesde(''); setMovHasta(''); }}
+                  >
+                    Limpiar
+                  </button>
+                )}
+                {movRangoInvalido && (
+                  <p className="login-error range-error" role="alert">
+                    La fecha "Desde" no puede ser posterior a "Hasta".
+                  </p>
+                )}
+              </div>
+            )}
             {movimientosSemana.length === 0 ? (
-              <p className="empty-state">No hay movimientos en esta semana.</p>
+              <p className="empty-state">{modoMovimientos === 'RANGO' ? 'No hay movimientos en el rango seleccionado.' : 'No hay movimientos en esta semana.'}</p>
             ) : (
               <div className="table-container">
               <table className="data-table">
