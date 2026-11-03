@@ -5,6 +5,7 @@ import { obtenerTodasLasTransacciones, eliminarTransaccion } from '../services/t
 import { obtenerUsuariosPendientes, actualizarEstadoUsuario } from '../services/usuarioService';
 import ModalConfirmar from '../components/ModalConfirmar';
 import SelectorFecha from '../components/SelectorFecha';
+import { exportarDashboardPdf } from '../utils/exportarPdf';
 import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -371,6 +372,29 @@ function DashboardAdmin() {
   });
   const porFecha = Object.values(porFechaMap).sort((a, b) => a.fecha.localeCompare(b.fecha));
 
+  function etiquetaPeriodoPdf() {
+    if (periodo === 'RANGO') {
+      if (fechaDesde && fechaHasta) return `${fechaDesde} al ${fechaHasta}`;
+      if (fechaDesde) return `Desde ${fechaDesde}`;
+      if (fechaHasta) return `Hasta ${fechaHasta}`;
+      return 'Rango de fechas (sin límites)';
+    }
+    if (periodo === 'SEMANA') return `Esta semana (${formatoRangoSemana(0)})`;
+    if (periodo === 'MES') return 'Este mes';
+    return 'Todo el historial';
+  }
+
+  function handleExportarPdf() {
+    exportarDashboardPdf({
+      movimientos: movimientosFiltrados,
+      porFecha,
+      totalIngresos,
+      totalGastos,
+      etiquetaPeriodo: etiquetaPeriodoPdf(),
+      generadoPor: usuario?.nombre,
+    });
+  }
+
   if (cargando) {
     return <div className="app-shell"><p className="empty-state">Cargando...</p></div>;
   }
@@ -464,16 +488,34 @@ function DashboardAdmin() {
           </>
         ) : (
           <>
-            <div className="period-selector">
-              {PERIODOS.map((p) => (
-                <button
-                  key={p.id}
-                  className={`period-btn ${periodo === p.id ? 'active' : ''}`}
-                  onClick={() => setPeriodo(p.id)}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+              <div className="period-selector">
+                {PERIODOS.map((p) => (
+                  <button
+                    key={p.id}
+                    className={`period-btn ${periodo === p.id ? 'active' : ''}`}
+                    onClick={() => setPeriodo(p.id)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleExportarPdf}
+                disabled={rangoInvalido || movimientosFiltrados.length === 0}
+                title="Descargar PDF con los movimientos y el gráfico del período seleccionado"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                  <path d="M12 18v-6" />
+                  <path d="M9 15l3 3 3-3" />
+                </svg>
+                Extraer a PDF
+              </button>
             </div>
 
             {periodo === 'RANGO' && (
