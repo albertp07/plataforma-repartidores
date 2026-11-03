@@ -11,6 +11,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import '../styles/shared.css';
+import { formatearFecha, formatearFechaLocal, formatearDiaMes } from '../utils/fechas';
 
 const chartTooltipStyle = {
   background: '#1B2126',
@@ -58,7 +59,7 @@ function ordenarMovimientos(lista) {
 }
 
 function formatoDia(iso) {
-  return new Date(`${iso}T12:00:00.000Z`).toLocaleDateString();
+  return formatearFecha(iso);
 }
 
 // Texto de la celda AM/PM del detalle diario de un repartidor
@@ -125,7 +126,7 @@ function rangoSemana(offset) {
 
 function formatoRangoSemana(offset) {
   const { inicio, fin } = rangoSemana(offset);
-  const fmt = (d) => d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+  const fmt = (d) => formatearDiaMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   return `${fmt(inicio)} al ${fmt(fin)}`;
 }
 
@@ -460,7 +461,7 @@ function DashboardAdmin() {
                       <td>{u.email}</td>
                       <td>{u.repartidor?.telefono || '-'}</td>
                       <td>{u.repartidor?.vehiculo || '-'}</td>
-                      <td>{new Date(u.creadoEn).toLocaleDateString()}</td>
+                      <td>{formatearFechaLocal(u.creadoEn)}</td>
                       <td>
                         <div className="row-actions">
                           <button
@@ -579,9 +580,9 @@ function DashboardAdmin() {
               <ResponsiveContainer>
                 <LineChart data={porFecha}>
                   <CartesianGrid stroke="#2A3238" strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" stroke="#8B98A1" fontSize={12} />
+                  <XAxis dataKey="fecha" stroke="#8B98A1" fontSize={12} tickFormatter={formatearFecha} />
                   <YAxis stroke="#8B98A1" fontSize={12} />
-                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Tooltip contentStyle={chartTooltipStyle} labelFormatter={formatearFecha} />
                   <Legend wrapperStyle={{ fontSize: '13px' }} />
                   <Line type="monotone" dataKey="ingresos" stroke="#4ADE80" name="Ingresos" strokeWidth={2} />
                   <Line type="monotone" dataKey="gastos" stroke="#FF7A6E" name="Gastos" strokeWidth={2} />
@@ -801,7 +802,7 @@ function DashboardAdmin() {
                           className={claseFila}
                           onClick={() => tieneDesglose && toggleFila(m.id)}
                         >
-                          <td>{new Date(m.fecha).toLocaleDateString()}</td>
+                          <td>{formatearFecha(m.fecha)}</td>
                           <td>{m.repartidor.usuario.nombre}</td>
                           <td>
                             <span className={`tag ${etiquetaTipo(m).clase}`}>{etiquetaTipo(m).texto}</span>
@@ -891,7 +892,7 @@ function DashboardAdmin() {
         titulo="Eliminar movimiento"
         mensaje={
           transaccionAEliminar
-            ? `¿Seguro que quieres eliminar el registro del ${new Date(transaccionAEliminar.fecha).toLocaleDateString()} de ${transaccionAEliminar.repartidor.usuario.nombre} — "${transaccionAEliminar.descripcion || 'sin descripción'}"? Esta acción no se puede deshacer.`
+            ? `¿Seguro que quieres eliminar el registro del ${formatearFecha(transaccionAEliminar.fecha)} de ${transaccionAEliminar.repartidor.usuario.nombre} — "${transaccionAEliminar.descripcion || 'sin descripción'}"? Esta acción no se puede deshacer.`
             : ''
         }
         onConfirmar={handleConfirmarEliminar}

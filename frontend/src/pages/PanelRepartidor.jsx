@@ -12,6 +12,7 @@ import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
 import '../styles/shared.css';
+import { formatearFecha, formatearDiaMes } from '../utils/fechas';
 
 const IVA = 0.19;
 const VALOR_PAQUETE_DEFAULT = 1500;
@@ -150,7 +151,7 @@ function rangoSemana(offset) {
 
 function formatoRangoSemana(offset) {
   const { inicio, fin } = rangoSemana(offset);
-  const fmt = (d) => d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+  const fmt = (d) => formatearDiaMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   return `${fmt(inicio)} al ${fmt(fin)}`;
 }
 
@@ -1185,7 +1186,7 @@ function PanelRepartidor() {
                           className={claseFila}
                           onClick={() => tieneDesglose && toggleFila(t.id)}
                         >
-                          <td>{new Date(t.fecha).toLocaleDateString()}</td>
+                          <td>{formatearFecha(t.fecha)}</td>
                           <td>
                             <span className={`tag ${etiquetaTipo(t).clase}`}>{etiquetaTipo(t).texto}</span>
                             {t.turno && <span className={`tag turno-${t.turno.toLowerCase()}`}>{t.turno}</span>}
@@ -1279,7 +1280,7 @@ function PanelRepartidor() {
         titulo="Eliminar movimiento"
         mensaje={
           transaccionAEliminar
-            ? `¿Seguro que quieres eliminar el registro del ${new Date(transaccionAEliminar.fecha).toLocaleDateString()} — "${transaccionAEliminar.descripcion || 'sin descripción'}"? Esta acción no se puede deshacer.`
+            ? `¿Seguro que quieres eliminar el registro del ${formatearFecha(transaccionAEliminar.fecha)} — "${transaccionAEliminar.descripcion || 'sin descripción'}"? Esta acción no se puede deshacer.`
             : ''
         }
         onConfirmar={handleConfirmarEliminar}

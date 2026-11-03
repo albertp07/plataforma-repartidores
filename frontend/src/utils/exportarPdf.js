@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatearFecha, formatearFechaLocal, formatearDiaMes, formatearFechaHoraLocal } from './fechas';
 
 const COLOR_INGRESO = [22, 163, 74];
 const COLOR_GASTO = [220, 70, 55];
@@ -12,18 +13,13 @@ function peso(valor) {
   return `$${Math.round(Number(valor) || 0).toLocaleString('es-CL')}`;
 }
 
-// Las fechas se guardan a mediodía UTC, se formatean en UTC para evitar desfase de día
+// Las fechas se guardan a mediodía UTC; formatearFecha las lee en UTC (DD-MM-YYYY)
 function fechaCorta(valor) {
-  const d = typeof valor === 'string' && valor.length === 10
-    ? new Date(`${valor}T12:00:00.000Z`)
-    : new Date(valor);
-  return d.toLocaleDateString('es-CL', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+  return formatearFecha(valor);
 }
 
 function fechaCortaSinAnio(iso) {
-  return new Date(`${iso}T12:00:00.000Z`).toLocaleDateString('es-CL', {
-    timeZone: 'UTC', day: '2-digit', month: '2-digit',
-  });
+  return formatearDiaMes(iso);
 }
 
 function textoDescripcion(m) {
@@ -140,7 +136,7 @@ export function exportarDashboardPdf({
   doc.setFontSize(10);
   doc.setTextColor(...COLOR_MUTED);
   doc.text(`Período: ${etiquetaPeriodo}`, margen, 25);
-  const generado = new Date().toLocaleString('es-CL');
+  const generado = formatearFechaHoraLocal(new Date());
   doc.text(
     `Generado el ${generado}${generadoPor ? ` por ${generadoPor}` : ''}`,
     margen,
@@ -253,6 +249,6 @@ export function exportarDashboardPdf({
     );
   }
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = formatearFechaLocal(new Date());
   doc.save(`reporte-ingresos-gastos-${hoy}.pdf`);
 }
