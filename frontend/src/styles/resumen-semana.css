@@ -1,0 +1,136 @@
+
+
+  /* ==========================================================
+     RESUMEN SEMANAL (Repartos + Retiros)
+     ========================================================== */
+  .rs {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .rs-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    background: #1B2126;
+    border: 1px solid #2A3238;
+    border-top: 3px solid #4ADE80;
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .rs-hero .stat-label {
+    margin-bottom: 6px;
+  }
+
+  .rs-hero-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #4ADE80;
+    margin: 0;
+  }
+
+  .rs-hero-sub {
+    font-size: 13px;
+    color: #8B98A1;
+    margin: 0;
+  }
+
+  .rs-counts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .rs-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .rs-card {
+    background: #1B2126;
+    border: 1px solid #2A3238;
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .rs-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #EDF1F3;
+    margin: 0 0 8px;
+  }
+
+  .rs-card-title svg {
+    color: #FFB020;
+    flex-shrink: 0;
+  }
+
+  .rs-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    color: #A6B0B6;
+    padding: 5px 0;
+  }
+
+  .rs-row-total {
+    color: #EDF1F3;
+    font-weight: 600;
+    border-top: 1px solid #22282D;
+    margin-top: 4px;
+    padding-top: 10px;
+  }
+
+  .rs-tarifas {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px dashed #2A3238;
+  }
+
+  .rs-tarifas .rs-row {
+    font-size: 12.5px;
+    color: #8B98A1;
+  }
+
+  @media (max-width: 768px) {
+    .rs-hero {
+      padding: 16px;
+    }
+
+    .rs-hero-value {
+      font-size: 28px;
+    }
+
+    .rs-counts {
+      gap: 10px;
+    }
+
+    .rs-counts .stat-card {
+      padding: 12px;
+    }
+
+    .rs-counts .stat-value {
+      font-size: 20px;
+    }
+
+    .rs-split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rs-card {
+      padding: 16px;
+    }
+  }

@@ -11,6 +11,7 @@ import ModalConfirmar from '../components/ModalConfirmar';
 import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
+import ResumenSemana from '../components/ResumenSemana';
 import '../styles/shared.css';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
 
@@ -1159,6 +1160,8 @@ function PanelRepartidor() {
                 </button>
               </div>
             </div>
+            <ResumenSemana transacciones={transaccionesSemana} />
+
             {transaccionesSemana.length === 0 ? (
               <p className="empty-state">No hay movimientos registrados en esta semana.</p>
             ) : (
