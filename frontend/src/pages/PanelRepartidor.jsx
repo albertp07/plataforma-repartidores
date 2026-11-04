@@ -12,8 +12,10 @@ import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
 import ResumenSemana from '../components/ResumenSemana';
+import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
+import ChatAsistente from '../components/ChatAsistente';
 import usePuntosRetiro from '../hooks/usePuntosRetiro';
 import '../styles/shared.css';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
@@ -648,6 +650,7 @@ function PanelRepartidor() {
 
   return (
     <div className="app-shell">
+      <ChatAsistente />
       <div className="app-container">
         <div className="app-topbar">
           <div>
@@ -1144,7 +1147,15 @@ function PanelRepartidor() {
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
+            <RankingSemanas
+              transacciones={transacciones}
+              onSeleccionarSemana={(offset) => {
+                setSemanaOffset(offset);
+                document.getElementById('historial-semana')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            />
+
+            <div id="historial-semana" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
               <p className="section-title" style={{ margin: 0 }}>Historial</p>
               <div className="week-nav">
                 <button

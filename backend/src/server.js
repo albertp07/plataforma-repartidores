@@ -8,6 +8,7 @@ const transaccionRoutes = require('./routes/transaccionRoutes');
 const reporteRoutes = require('./routes/reporteRoutes');
 const puntoRetiroRoutes = require('./routes/puntoRetiroRoutes');
 const capturaRoutes = require('./routes/capturaRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 require('dotenv').config();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -22,6 +23,7 @@ app.use('/reportes', reporteRoutes);
 app.use('/transacciones', transaccionRoutes);
 app.use('/puntos-retiro', puntoRetiroRoutes);
 app.use('/capturas', capturaRoutes);
+app.use('/chat', chatRoutes);
 app.use('/repartidores', repartidorRoutes);
 app.use('/usuarios', usuarioRoutes);
 

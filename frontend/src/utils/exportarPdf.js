@@ -111,10 +111,11 @@ function dibujarGrafico(doc, datos, x, y, ancho, alto) {
 }
 
 /**
- * Genera y descarga un PDF con el resumen, el gráfico de ingresos/gastos en el tiempo
- * y el detalle de todos los movimientos del período filtrado.
+ * Construye el PDF (resumen, gráfico de ingresos/gastos en el tiempo y detalle de
+ * movimientos del período filtrado) sin descargarlo. Devuelve el documento y el
+ * nombre de archivo sugerido, para poder mostrar una vista previa antes de guardar.
  */
-export function exportarDashboardPdf({
+export function generarDashboardPdf({
   movimientos,
   porFecha,
   totalIngresos,
@@ -250,5 +251,11 @@ export function exportarDashboardPdf({
   }
 
   const hoy = formatearFechaLocal(new Date());
-  doc.save(`reporte-ingresos-gastos-${hoy}.pdf`);
+  return { doc, nombreArchivo: `reporte-ingresos-gastos-${hoy}.pdf` };
+}
+
+/** Genera y descarga el PDF directamente (sin vista previa). */
+export function exportarDashboardPdf(params) {
+  const { doc, nombreArchivo } = generarDashboardPdf(params);
+  doc.save(nombreArchivo);
 }

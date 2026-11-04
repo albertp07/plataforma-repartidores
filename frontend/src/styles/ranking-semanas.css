@@ -1,0 +1,179 @@
+/* ==========================================================
+   RANKING DE SEMANAS (historial, sin IA)
+   ========================================================== */
+.rk {
+  margin-bottom: 18px;
+  background: #1B2126;
+  border: 1px solid #2A3238;
+  border-radius: 10px;
+}
+
+.rk-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  color: #E6EBEE;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rk-toggle-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #FFB020;
+}
+
+.rk-chevron {
+  color: #A6B0B6;
+  transition: transform 0.15s ease;
+}
+
+.rk-chevron.rk-abierto {
+  transform: rotate(180deg);
+}
+
+.rk-body {
+  padding: 0 16px 16px;
+}
+
+.rk-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rk-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #A6B0B6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rk-control select {
+  min-width: 128px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #E6EBEE;
+  background: #14181B;
+  border: 1px solid #2A3238;
+  border-radius: 8px;
+}
+
+.rk-control select:focus-visible {
+  outline: none;
+  border-color: #FFB020;
+}
+
+.rk-orden {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #E6EBEE;
+  background: #14181B;
+  border: 1px solid #2A3238;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rk-orden:hover {
+  border-color: #FFB020;
+  color: #FFB020;
+}
+
+.rk-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rk-fila {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  color: #E6EBEE;
+  background: #14181B;
+  border: 1px solid #2A3238;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.rk-fila:hover {
+  border-color: #FFB020;
+}
+
+.rk-pos {
+  flex: 0 0 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #A6B0B6;
+  background: #1B2126;
+  border-radius: 50%;
+}
+
+.rk-pos-top {
+  color: #14181B;
+  background: #FFB020;
+}
+
+.rk-semana {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rk-semana strong {
+  font-size: 13.5px;
+}
+
+.rk-semana small {
+  font-size: 11.5px;
+  color: #A6B0B6;
+}
+
+.rk-montos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rk-ingreso { color: #4ADE80; }
+.rk-gasto { color: #FF7A6E; }
+.rk-balance { color: #E6EBEE; }
+.rk-balance.rk-negativo { color: #FF7A6E; }
+
+.rk-activa {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.rk-leyenda {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: #A6B0B6;
+}

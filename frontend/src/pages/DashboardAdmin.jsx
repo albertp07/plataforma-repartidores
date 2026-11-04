@@ -5,7 +5,9 @@ import { obtenerTodasLasTransacciones, eliminarTransaccion } from '../services/t
 import { obtenerUsuariosPendientes, actualizarEstadoUsuario } from '../services/usuarioService';
 import ModalConfirmar from '../components/ModalConfirmar';
 import SelectorFecha from '../components/SelectorFecha';
-import { exportarDashboardPdf } from '../utils/exportarPdf';
+import ChatAsistente from '../components/ChatAsistente';
+import { generarDashboardPdf } from '../utils/exportarPdf';
+import ModalVistaPreviaPdf from '../components/ModalVistaPreviaPdf';
 import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -144,6 +146,7 @@ function DashboardAdmin() {
   const [movimientos, setMovimientos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [periodo, setPeriodo] = useState('TODO');
+  const [vistaPreviaPdf, setVistaPreviaPdf] = useState(null);
   const [semanaOffset, setSemanaOffset] = useState(0);
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
@@ -386,7 +389,7 @@ function DashboardAdmin() {
   }
 
   function handleExportarPdf() {
-    exportarDashboardPdf({
+    const { doc, nombreArchivo } = generarDashboardPdf({
       movimientos: movimientosFiltrados,
       porFecha,
       totalIngresos,
@@ -394,6 +397,7 @@ function DashboardAdmin() {
       etiquetaPeriodo: etiquetaPeriodoPdf(),
       generadoPor: usuario?.nombre,
     });
+    setVistaPreviaPdf({ doc, nombreArchivo });
   }
 
   if (cargando) {
@@ -402,6 +406,7 @@ function DashboardAdmin() {
 
   return (
     <div className="app-shell">
+      <ChatAsistente />
       <div className="app-container">
         <div className="app-topbar">
           <div>
@@ -506,7 +511,7 @@ function DashboardAdmin() {
                 className="btn-primary"
                 onClick={handleExportarPdf}
                 disabled={rangoInvalido || movimientosFiltrados.length === 0}
-                title="Descargar PDF con los movimientos y el gráfico del período seleccionado"
+                title="Ver vista previa del PDF con los movimientos y el gráfico del período seleccionado"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -886,6 +891,11 @@ function DashboardAdmin() {
           </>
         )}
       </div>
+
+      <ModalVistaPreviaPdf
+        vistaPrevia={vistaPreviaPdf}
+        onCerrar={() => setVistaPreviaPdf(null)}
+      />
 
       <ModalConfirmar
         visible={!!transaccionAEliminar}
