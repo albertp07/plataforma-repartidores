@@ -13,6 +13,7 @@ import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
 import ResumenSemana from '../components/ResumenSemana';
 import SelectorRetiros from '../components/SelectorRetiros';
+import ImportarCaptura from '../components/ImportarCaptura';
 import usePuntosRetiro from '../hooks/usePuntosRetiro';
 import '../styles/shared.css';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
@@ -237,6 +238,7 @@ function PanelRepartidor() {
   const [eliminando, setEliminando] = useState(false);
   const [filaExpandida, setFilaExpandida] = useState(null);
   const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
+  const [mostrarCaptura, setMostrarCaptura] = useState(false);
 
   useEffect(() => {
     document.title = 'Aryal - Panel Repartidor';
@@ -741,6 +743,19 @@ function PanelRepartidor() {
 
               {tipo === 'INGRESO' ? (
                 <>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    style={{ marginBottom: '16px' }}
+                    onClick={() => { setError(''); setMostrarCaptura(true); }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '6px', marginTop: '-2px' }}>
+                      <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <circle cx="12" cy="13" r="3.5" />
+                    </svg>
+                    Registrar día con una foto
+                  </button>
+
                   <p className="field-label" style={{ marginBottom: '14px' }}>
                     Selecciona el modo de ingreso
                   </p>
@@ -1277,6 +1292,16 @@ function PanelRepartidor() {
           </>
         )}
       </div>
+
+      {mostrarCaptura && (
+        <ImportarCaptura
+          puntosRetiro={puntosRetiro}
+          crearPunto={crearPunto}
+          turnosOcupados={(categoria, iso) => turnosRegistrados(categoria, isoADDMMYYYY(iso))}
+          onGuardado={cargarTransacciones}
+          onCerrar={() => setMostrarCaptura(false)}
+        />
+      )}
 
       <ModalConfirmar
         visible={!!transaccionAEliminar}
