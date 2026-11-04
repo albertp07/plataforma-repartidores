@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { login, registrar, loginConGoogle } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
@@ -309,6 +309,11 @@ function Login() {
         )}
 
         <p className="login-footer">Plataforma de Gestión Financiera para Repartidores</p>
+        <p className="login-footer">
+          <Link to="/privacidad" className="login-link">Privacidad</Link>
+          {' · '}
+          <Link to="/terminos" className="login-link">Términos</Link>
+        </p>
       </div>
     </div>
   );
