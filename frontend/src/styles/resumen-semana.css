@@ -134,3 +134,74 @@
       padding: 16px;
     }
   }
+
+  /* Acumulado semanal (estilo app) */
+  .rs-acum {
+    background: #1B2126;
+    border: 1px solid #2A3238;
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .rs-acum-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .rs-acum-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 176, 32, 0.12);
+    color: #FFB020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .rs-acum-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #EDF1F3;
+    margin: 0;
+  }
+
+  .rs-acum-sub {
+    font-size: 12.5px;
+    color: #8B98A1;
+    margin: 2px 0 0;
+  }
+
+  .rs-acum-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 14.5px;
+    color: #A6B0B6;
+    padding: 8px 0;
+  }
+
+  .rs-acum-row strong {
+    color: #EDF1F3;
+    font-weight: 600;
+  }
+
+  .rs-acum-factura {
+    border-top: 1px solid #2A3238;
+    margin-top: 6px;
+    padding-top: 14px;
+    color: #EDF1F3;
+    font-size: 15px;
+  }
+
+  .rs-acum-factura strong {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #4ADE80;
+  }

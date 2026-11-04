@@ -2,9 +2,9 @@ const { leerCapturaDia } = require('../services/capturaService');
 
 const VALOR_PAQUETE_DEFAULT = 1500;
 
-// Rate limit simple en memoria: máximo 20 análisis por usuario cada hora
+// Rate limit simple en memoria: máximo 40 análisis por usuario cada hora
 const VENTANA_MS = 60 * 60 * 1000;
-const MAX_POR_VENTANA = 20;
+const MAX_POR_VENTANA = 40;
 const usos = new Map();
 
 function excedeLimite(usuarioId) {
