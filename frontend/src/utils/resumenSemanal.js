@@ -45,12 +45,23 @@ export function calcularResumenSemanal(transacciones) {
       retiros.bruto += bruto;
       retiros.cantidad += cantidad;
 
-      // Cada retiro guarda su valor unitario: así ya queda listo para tarifas distintas (1.500 / 3.000)
-      const valor = Number(t.valorPaquete) || 0;
-      const actual = tarifas.get(valor) || { valor, cantidad: 0, neto: 0 };
-      actual.cantidad += cantidad;
-      actual.neto += neto;
-      tarifas.set(valor, actual);
+      // Agrupa por tarifa (1.500 / 3.000 ...). Los registros nuevos traen cada retiro en detallesRetiro;
+      // los antiguos tienen un solo valor unitario en valorPaquete.
+      const sumar = (valor, cant, netoParcial) => {
+        const actual = tarifas.get(valor) || { valor, cantidad: 0, neto: 0 };
+        actual.cantidad += cant;
+        actual.neto += netoParcial;
+        tarifas.set(valor, actual);
+      };
+
+      if (t.detallesRetiro?.length > 0) {
+        for (const d of t.detallesRetiro) {
+          const precio = Number(d.precio) || 0;
+          sumar(precio, 1, precio);
+        }
+      } else {
+        sumar(Number(t.valorPaquete) || 0, cantidad, neto);
+      }
     }
   }
 

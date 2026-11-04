@@ -12,12 +12,13 @@ import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
 import ResumenSemana from '../components/ResumenSemana';
+import SelectorRetiros from '../components/SelectorRetiros';
+import usePuntosRetiro from '../hooks/usePuntosRetiro';
 import '../styles/shared.css';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
 
 const IVA = 0.19;
 const VALOR_PAQUETE_DEFAULT = 1500;
-const VALOR_RETIRO_DEFAULT = 1500;
 
 const MODOS_INGRESO = [
   { id: 'PAQUETES', icono: '📦', label: 'Reparto de Paquetes', sub: 'Entregas del día' },
@@ -187,6 +188,14 @@ function PanelRepartidor() {
   const [vehiculo, setVehiculo] = useState('');
 
   const [transacciones, setTransacciones] = useState([]);
+  const {
+    puntos: puntosRetiro,
+    cargando: cargandoPuntos,
+    errorCarga: errorPuntos,
+    crear: crearPunto,
+    actualizar: actualizarPunto,
+    quitar: quitarPunto,
+  } = usePuntosRetiro(!!perfil);
   const [periodo, setPeriodo] = useState('TODO');
   const [semanaOffset, setSemanaOffset] = useState(0);
 
@@ -205,8 +214,7 @@ function PanelRepartidor() {
 
   // Ingreso: Retiros
   const [fechaRetiro, setFechaRetiro] = useState(() => isoADDMMYYYY(hoyISO()));
-  const [cantidadRetiros, setCantidadRetiros] = useState('');
-  const [valorRetiro, setValorRetiro] = useState(VALOR_RETIRO_DEFAULT);
+  const [retirosSeleccionados, setRetirosSeleccionados] = useState([]);
   const [observacionesRetiro, setObservacionesRetiro] = useState('');
   const [sinRetiro, setSinRetiro] = useState(false);
   const [turnoRetiro, setTurnoRetiro] = useState(turnoPorDefecto);
@@ -245,10 +253,10 @@ function PanelRepartidor() {
   const bruto = liquido + iva;
 
   // Cálculo en vivo: retiros
-  const retiros = Number(cantidadRetiros) || 0;
-  const valorRetiroUnit = Number(valorRetiro) || 0;
-  const liquidoRetiro = retiros * valorRetiroUnit;
-  const ivaRetiro = liquidoRetiro * IVA;
+  const retirosMarcados = puntosRetiro.filter((p) => retirosSeleccionados.includes(p.id));
+  const retiros = retirosMarcados.length;
+  const liquidoRetiro = retirosMarcados.reduce((suma, p) => suma + Number(p.precio), 0);
+  const ivaRetiro = Math.round(liquidoRetiro * IVA);
   const brutoRetiro = liquidoRetiro + ivaRetiro;
 
   // Cálculo en vivo: descuento de combustible
@@ -485,7 +493,6 @@ function PanelRepartidor() {
           turno: turnoRetiro,
           categoriaIngreso: 'RETIROS',
           cantidadPaquetes: 0,
-          valorPaquete: valorRetiroUnit,
           montoLiquido: 0,
           montoIva: 0,
           sinActividad: true,
@@ -506,7 +513,7 @@ function PanelRepartidor() {
     }
 
     if (retiros <= 0) {
-      setError('Ingresa una cantidad de retiros válida');
+      setError('Marca al menos un retiro');
       return;
     }
 
@@ -518,14 +525,12 @@ function PanelRepartidor() {
         descripcion: `Retiros · ${retiros} colectas`,
         turno: turnoRetiro,
         categoriaIngreso: 'RETIROS',
-        cantidadPaquetes: retiros,
-        valorPaquete: valorRetiroUnit,
-        montoLiquido: liquidoRetiro,
-        montoIva: ivaRetiro,
+        // El servidor recalcula los montos desde los retiros marcados
+        puntosRetiroIds: retirosSeleccionados,
         observaciones: observacionesRetiro.trim() || undefined,
         fecha: `${fechaISO}T12:00:00.000Z`,
       });
-      setCantidadRetiros('');
+      setRetirosSeleccionados([]);
       setTurnoRetiro(siguienteTurno(turnoRetiro, fechaISO));
       setObservacionesRetiro('');
       setFechaRetiro(isoADDMMYYYY(hoyISO()));
@@ -923,29 +928,16 @@ function PanelRepartidor() {
 
                       {!sinRetiro && (
                       <>
-                      <div className="field">
-                        <span className="field-label">Cantidad de retiros</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="9999"
-                          value={cantidadRetiros}
-                          onChange={(e) => setCantidadRetiros(limitarCantidad(e.target.value))}
-                          placeholder="Ej: 20"
-                          required
-                        />
-                      </div>
-
-                      <div className="field">
-                        <span className="field-label">Valor por retiro</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="99999999"
-                          value={valorRetiro}
-                          onChange={(e) => setValorRetiro(limitarMonto(e.target.value))}
-                        />
-                      </div>
+                      <SelectorRetiros
+                        puntos={puntosRetiro}
+                        seleccionados={retirosSeleccionados}
+                        onCambiarSeleccion={setRetirosSeleccionados}
+                        onCrear={crearPunto}
+                        onActualizar={actualizarPunto}
+                        onQuitar={quitarPunto}
+                        cargando={cargandoPuntos}
+                        errorCarga={errorPuntos}
+                      />
 
                       </>
                       )}
@@ -967,7 +959,7 @@ function PanelRepartidor() {
                       {!sinRetiro && (
                       <div className="calc-summary">
                         <div className="calc-row">
-                          <span>Líquido ({retiros} × ${formatoPeso(valorRetiroUnit)})</span>
+                          <span>Líquido ({retiros} {retiros === 1 ? 'retiro' : 'retiros'})</span>
                           <span>${formatoPeso(liquidoRetiro)}</span>
                         </div>
                         <div className="calc-row">
@@ -1253,10 +1245,18 @@ function PanelRepartidor() {
                                     {t.paquetesSobredimensionados} Sobredimensionados
                                   </span>
                                 )}
-                                {t.categoriaIngreso === 'RETIROS' && t.cantidadPaquetes != null && (
-                                  <span className="badge badge-neutral">
-                                    {t.cantidadPaquetes} retiros
-                                  </span>
+                                {t.categoriaIngreso === 'RETIROS' && t.detallesRetiro?.length > 0 ? (
+                                  t.detallesRetiro.map((d) => (
+                                    <span className="badge badge-neutral" key={d.id}>
+                                      {d.nombre} · ${formatoPeso(d.precio)}
+                                    </span>
+                                  ))
+                                ) : (
+                                  t.categoriaIngreso === 'RETIROS' && t.cantidadPaquetes != null && (
+                                    <span className="badge badge-neutral">
+                                      {t.cantidadPaquetes} retiros
+                                    </span>
+                                  )
                                 )}
                                     </>
                                   )}

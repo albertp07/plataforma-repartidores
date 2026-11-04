@@ -3,6 +3,7 @@ const cors = require('cors');
 const repartidorRoutes = require('./routes/repartidorRoutes');
 const transaccionRoutes = require('./routes/transaccionRoutes');
 const reporteRoutes = require('./routes/reporteRoutes');
+const puntoRetiroRoutes = require('./routes/puntoRetiroRoutes');
 require('dotenv').config();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use('/reportes', reporteRoutes);
 app.use('/transacciones', transaccionRoutes);
+app.use('/puntos-retiro', puntoRetiroRoutes);
 app.use('/repartidores', repartidorRoutes);
 app.use('/usuarios', usuarioRoutes);
 

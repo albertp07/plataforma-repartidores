@@ -1,6 +1,7 @@
 const prisma = require('../config/prisma');
 
 const TURNOS_VALIDOS = ['AM', 'PM'];
+const IVA = 0.19;
 
 // Registrar un ingreso o gasto
 async function crearTransaccion(req, res) {
@@ -10,12 +11,15 @@ async function crearTransaccion(req, res) {
       montoSinDescuento, descuentoAplicado,
       cantidadPaquetes, paquetesFallidos, paquetesTotalSalida, paquetesSobredimensionados,
       valorPaquete, montoLiquido, montoIva, observaciones, sinActividad, turno,
+      puntosRetiroIds,
     } = req.body;
 
     const esSinActividad = sinActividad === true;
+    // Retiros por checklist: el monto lo calcula el servidor desde los puntos elegidos
+    const retirosPorChecklist = categoriaIngreso === 'RETIROS' && !esSinActividad && Array.isArray(puntosRetiroIds);
 
     // Un día sin reparto/retiro se registra con monto 0, por eso no se puede validar con !monto
-    if (!tipo || monto === undefined || monto === null || (!esSinActividad && !monto)) {
+    if (!tipo || (!retirosPorChecklist && (monto === undefined || monto === null || (!esSinActividad && !monto)))) {
       return res.status(400).json({ error: 'Tipo y monto son obligatorios' });
     }
 
@@ -73,6 +77,40 @@ async function crearTransaccion(req, res) {
       }
     }
 
+    // Retiros por checklist: se calculan montos y se guarda una copia (snapshot) de cada retiro marcado
+    let datosRetiro = null;
+    if (tipo === 'INGRESO' && retirosPorChecklist) {
+      const ids = [...new Set(puntosRetiroIds.map(Number))];
+      if (ids.length === 0 || ids.some((n) => !Number.isInteger(n) || n <= 0)) {
+        return res.status(400).json({ error: 'Selecciona al menos un retiro' });
+      }
+
+      const puntos = await prisma.puntoRetiro.findMany({
+        where: { id: { in: ids }, repartidorId: repartidor.id, activo: true },
+        orderBy: [{ zona: 'asc' }, { nombre: 'asc' }],
+      });
+      if (puntos.length !== ids.length) {
+        return res.status(400).json({ error: 'Alguno de los retiros seleccionados ya no está disponible' });
+      }
+
+      const liquido = puntos.reduce((suma, p) => suma + Number(p.precio), 0);
+      const ivaCalculado = Math.round(liquido * IVA);
+
+      datosRetiro = {
+        monto: liquido + ivaCalculado,
+        montoLiquido: liquido,
+        montoIva: ivaCalculado,
+        cantidadPaquetes: puntos.length,
+        descripcion: `Retiros · ${puntos.length} colectas`,
+        detalles: puntos.map((p) => ({
+          puntoRetiroId: p.id,
+          nombre: p.nombre,
+          zona: p.zona,
+          precio: p.precio,
+        })),
+      };
+    }
+
     const transaccion = await prisma.transaccion.create({
       data: {
         repartidorId: repartidor.id,
@@ -94,7 +132,16 @@ async function crearTransaccion(req, res) {
         sinActividad: esSinActividad,
         turno: tipo === 'INGRESO' ? turno : undefined,
         fecha: fecha ? new Date(fecha) : undefined,
+        ...(datosRetiro && {
+          monto: datosRetiro.monto,
+          montoLiquido: datosRetiro.montoLiquido,
+          montoIva: datosRetiro.montoIva,
+          cantidadPaquetes: datosRetiro.cantidadPaquetes,
+          descripcion: datosRetiro.descripcion,
+          detallesRetiro: { create: datosRetiro.detalles },
+        }),
       },
+      include: { detallesRetiro: true },
     });
 
     res.status(201).json(transaccion);
@@ -117,6 +164,7 @@ async function misTransacciones(req, res) {
 
     const transacciones = await prisma.transaccion.findMany({
       where: { repartidorId: repartidor.id },
+      include: { detallesRetiro: true },
       orderBy: { fecha: 'desc' },
     });
 
@@ -148,6 +196,7 @@ async function todasLasTransacciones(req, res) {
   try {
     const transacciones = await prisma.transaccion.findMany({
       include: {
+        detallesRetiro: true,
         repartidor: {
           include: { usuario: { select: { nombre: true, email: true } } },
         },

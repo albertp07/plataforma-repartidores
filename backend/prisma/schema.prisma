@@ -43,6 +43,7 @@ model Repartidor {
   telefono      String?
   vehiculo      String?
   transacciones Transaccion[]
+  puntosRetiro  PuntoRetiro[]
   creadoEn      DateTime      @default(now())
 }
 
@@ -68,6 +69,7 @@ model Transaccion {
   sinActividad        Boolean         @default(false)
   turno               Turno?
   fecha               DateTime        @default(now())
+  detallesRetiro      DetalleRetiro[]
 }
 
 enum TipoTransaccion {
@@ -79,4 +81,35 @@ enum TipoTransaccion {
 enum Turno {
   AM
   PM
+}
+
+// Catálogo de retiros fijos del repartidor (cliente + zona + precio).
+// Se desactivan (activo = false) en vez de borrarse, para no romper el historial.
+model PuntoRetiro {
+  id           Int             @id @default(autoincrement())
+  repartidorId Int
+  repartidor   Repartidor      @relation(fields: [repartidorId], references: [id])
+  nombre       String
+  zona         String
+  precio       Decimal         @db.Decimal(10, 2)
+  activo       Boolean         @default(true)
+  creadoEn     DateTime        @default(now())
+  detalles     DetalleRetiro[]
+
+  @@unique([repartidorId, zona, nombre])
+}
+
+// Retiros marcados en un registro de ingreso. Guarda copia (snapshot) del nombre,
+// zona y precio al momento de registrar, así cambios futuros del catálogo no alteran el historial.
+model DetalleRetiro {
+  id            Int          @id @default(autoincrement())
+  transaccionId Int
+  transaccion   Transaccion  @relation(fields: [transaccionId], references: [id], onDelete: Cascade)
+  puntoRetiroId Int?
+  puntoRetiro   PuntoRetiro? @relation(fields: [puntoRetiroId], references: [id], onDelete: SetNull)
+  nombre        String
+  zona          String
+  precio        Decimal      @db.Decimal(10, 2)
+
+  @@index([transaccionId])
 }
