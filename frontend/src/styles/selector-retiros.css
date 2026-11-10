@@ -15,7 +15,7 @@
 .retiros-link {
   background: none;
   border: none;
-  color: #FFB020;
+  color: var(--brand-ink);
   font-size: 13px;
   cursor: pointer;
   padding: 4px 0;
@@ -32,13 +32,13 @@
 
 .retiros-hint {
   font-size: 13px;
-  color: #8B98A1;
+  color: var(--ink-mute);
   margin: 0 0 12px;
 }
 
 .retiros-error {
   font-size: 13px;
-  color: #F87171;
+  color: var(--bad);
   margin: 8px 0;
 }
 
@@ -53,33 +53,33 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #14181B;
-  border: 1px solid #2A3238;
-  color: #A6B0B6;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   font-size: 13.5px;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .retiros-zona:hover {
-  border-color: #FFB020;
+  border-color: var(--brand);
 }
 
 .retiros-zona.active {
-  border-color: #FFB020;
-  color: #FFB020;
-  background: rgba(255, 176, 32, 0.08);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+  background: rgba(247, 166, 0, 0.08);
 }
 
 .retiros-zona-count {
-  font-size: 11.5px;
-  color: #8B98A1;
+  font-size: 12.5px;
+  color: var(--ink-mute);
 }
 
 .retiros-zona.active .retiros-zona-count {
-  color: #FFB020;
+  color: var(--brand-ink);
 }
 
 .retiros-lista {
@@ -95,9 +95,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #14181B;
-  border: 1px solid #2A3238;
-  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
   padding: 12px 14px;
   min-height: 48px;
   cursor: pointer;
@@ -105,12 +105,12 @@
 }
 
 .retiro-item:hover {
-  border-color: #3A444B;
+  border-color: var(--line-strong);
 }
 
 .retiro-item.marcado {
-  border-color: #FFB020;
-  background: rgba(255, 176, 32, 0.07);
+  border-color: var(--brand);
+  background: rgba(247, 166, 0, 0.07);
 }
 
 .retiro-item input[type="checkbox"] {
@@ -118,26 +118,26 @@
   height: 20px;
   margin: 0;
   flex-shrink: 0;
-  accent-color: #FFB020;
+  accent-color: var(--brand);
   cursor: pointer;
 }
 
 .retiro-nombre {
   flex: 1;
   min-width: 0;
-  color: #E6EBEE;
+  color: var(--ink);
   font-size: 15px;
   overflow-wrap: anywhere;
 }
 
 .retiro-precio {
-  color: #A6B0B6;
+  color: var(--ink-soft);
   font-size: 14px;
   white-space: nowrap;
 }
 
 .retiro-item.marcado .retiro-precio {
-  color: #FFB020;
+  color: var(--brand-ink);
 }
 
 .retiro-gestion,
@@ -150,10 +150,10 @@
 }
 
 .retiro-editando input {
-  background: #0F1214;
-  border: 1px solid #2A3238;
-  color: #E6EBEE;
-  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: var(--r-sm);
   padding: 8px 10px;
   font-size: 14px;
   flex: 1;
@@ -167,40 +167,40 @@
 
 .retiro-confirma {
   font-size: 12.5px;
-  color: #F87171;
+  color: var(--bad);
 }
 
 .retiro-accion {
   background: transparent;
-  border: 1px solid #2A3238;
-  color: #A6B0B6;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: var(--r-sm);
   padding: 6px 10px;
   font-size: 12.5px;
   cursor: pointer;
 }
 
 .retiro-accion:hover {
-  border-color: #FFB020;
-  color: #FFB020;
+  border-color: var(--brand);
+  color: var(--brand-ink);
 }
 
 .retiro-accion.ok {
-  border-color: #FFB020;
-  color: #FFB020;
+  border-color: var(--brand);
+  color: var(--brand-ink);
 }
 
 .retiro-accion.peligro:hover,
 .retiro-icono.peligro:hover {
-  border-color: #F87171;
-  color: #F87171;
+  border-color: var(--bad);
+  color: var(--bad);
 }
 
 .retiro-icono {
   background: transparent;
-  border: 1px solid #2A3238;
-  color: #A6B0B6;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: var(--r-sm);
   width: 32px;
   height: 32px;
   display: inline-flex;
@@ -210,8 +210,8 @@
 }
 
 .retiro-icono:hover {
-  border-color: #FFB020;
-  color: #FFB020;
+  border-color: var(--brand);
+  color: var(--brand-ink);
 }
 
 .retiros-nuevo-btn {
@@ -221,9 +221,9 @@
 .retiros-nuevo {
   margin-top: 12px;
   padding: 14px;
-  background: #1B2126;
-  border: 1px solid #2A3238;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
 }
 
 .retiros-nuevo-acciones {

@@ -16,16 +16,17 @@ import '../styles/shared.css';
 import { formatearFecha, formatearFechaLocal, formatearDiaMes } from '../utils/fechas';
 
 const chartTooltipStyle = {
-  background: '#1B2126',
-  border: '1px solid #2A3238',
-  borderRadius: '8px',
+  background: '#FFFFFF',
+  border: '1px solid #E2E6EB',
+  borderRadius: '12px',
+  boxShadow: '0 8px 24px rgba(29, 34, 41, 0.12)',
   fontSize: '13px',
 };
 
 const PERIODOS = [
   { id: 'TODO', label: 'Todo' },
-  { id: 'SEMANA', label: 'Esta semana' },
   { id: 'MES', label: 'Este mes' },
+  { id: 'SEMANA', label: 'Esta semana' },
   { id: 'RANGO', label: 'Rango de fechas' },
 ];
 
@@ -145,7 +146,7 @@ function DashboardAdmin() {
 
   const [movimientos, setMovimientos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [periodo, setPeriodo] = useState('TODO');
+  const [periodo, setPeriodo] = useState('MES');
   const [vistaPreviaPdf, setVistaPreviaPdf] = useState(null);
   const [semanaOffset, setSemanaOffset] = useState(0);
   const [fechaDesde, setFechaDesde] = useState('');
@@ -409,9 +410,12 @@ function DashboardAdmin() {
       <ChatAsistente />
       <div className="app-container">
         <div className="app-topbar">
-          <div>
-            <h1>Panel Administrativo</h1>
-            <p className="app-user">Bienvenido, {usuario?.nombre}</p>
+          <div className="app-brand">
+            <img className="app-brand-logo" src="/favicon-192.png" alt="" width="44" height="44" />
+            <div>
+              <h1>Panel Administrativo</h1>
+              <p className="app-user">Hola, {usuario?.nombre}</p>
+            </div>
           </div>
           <div className="topbar-actions">
             <button className="btn-ghost" onClick={() => navigate('/panel')}>
@@ -584,13 +588,13 @@ function DashboardAdmin() {
             <div className="chart-wrap">
               <ResponsiveContainer>
                 <LineChart data={porFecha}>
-                  <CartesianGrid stroke="#2A3238" strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" stroke="#8B98A1" fontSize={12} tickFormatter={formatearFecha} />
-                  <YAxis stroke="#8B98A1" fontSize={12} />
+                  <CartesianGrid stroke="#E2E6EB" strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" stroke="#66717E" fontSize={12} tickFormatter={formatearFecha} />
+                  <YAxis stroke="#66717E" fontSize={12} />
                   <Tooltip contentStyle={chartTooltipStyle} labelFormatter={formatearFecha} />
                   <Legend wrapperStyle={{ fontSize: '13px' }} />
-                  <Line type="monotone" dataKey="ingresos" stroke="#4ADE80" name="Ingresos" strokeWidth={2} />
-                  <Line type="monotone" dataKey="gastos" stroke="#FF7A6E" name="Gastos" strokeWidth={2} />
+                  <Line type="monotone" dataKey="ingresos" stroke="#16A57A" name="Ingresos" strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="gastos" stroke="#E0493D" name="Gastos" strokeWidth={3} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

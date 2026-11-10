@@ -1,12 +1,104 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   Aryal · sistema de diseño "Luz de día"
+   Pensado para leerse al sol, con una mano y con guantes.
+   Marca: ámbar y carbón del logo, sobre superficies claras.
+   ============================================================ */
+:root {
+  /* Superficies */
+  --bg: #F1F3F6;
+  --surface: #FFFFFF;
+  --surface-2: #F6F7F9;
+  --hover: #EEF1F4;
+  --zebra: #FAFBFC;
+
+  /* Líneas */
+  --line: #E2E6EB;
+  --line-soft: #ECEFF2;
+  --line-strong: #C9D0D8;
+
+  /* Texto */
+  --ink: #1D2229;
+  --ink-soft: #46505C;
+  --ink-mute: #66717E;
+  --ink-faint: #98A2AD;
+
+  /* Marca */
+  --brand: #F7A600;
+  --brand-strong: #E29600;
+  --brand-ink: #8A5300;
+  --brand-wash: #FFF1D1;
+  --on-brand: #1D2229;
+  --carbon: #23272E;
+
+  /* Estados */
+  --ok: #0B7A5A;
+  --ok-bright: #16A57A;
+  --ok-wash: #E2F4EC;
+  --bad: #C03328;
+  --bad-bright: #E0493D;
+  --bad-wash: #FCEAE8;
+  --info: #1B6FD1;
+  --info-wash: #E5EFFB;
+  --pm: #6B4FD6;
+  --pm-wash: #EEEAFB;
+
+  /* Forma */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --shadow-card: 0 1px 2px rgba(29, 34, 41, 0.04), 0 4px 14px rgba(29, 34, 41, 0.05);
+  --shadow-pop: 0 12px 36px rgba(29, 34, 41, 0.16);
+  --focus: 0 0 0 3px rgba(247, 166, 0, 0.35);
+
+  /* Tipografía */
+  --font-display: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-  background: #14181B;
-  color: #EDF1F3;
-  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

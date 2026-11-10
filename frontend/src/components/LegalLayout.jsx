@@ -10,7 +10,7 @@ function LegalLayout({ titulo, tituloPestana, actualizado, children }) {
   return (
     <div className="legal-screen">
       <article className="legal-card">
-        <span className="legal-eyebrow">PLATAFORMA REPARTIDORES</span>
+        
         <h1 className="legal-title">{titulo}</h1>
         <p className="legal-updated">Última actualización: {actualizado}</p>
 

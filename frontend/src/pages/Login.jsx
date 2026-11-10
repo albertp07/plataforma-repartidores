@@ -3,13 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { login, registrar, loginConGoogle } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import LoginCarousel from '../components/LoginCarousel';
 import './Login.css';
 
 function Login() {
   const [vista, setVista] = useState('login'); // 'login' | 'registro'
 
   useEffect(() => {
-    document.title = 'Aryal - Iniciar Sesión';
+    document.title = 'Rinde - Iniciar Sesión';
   }, []);
 
   const [email, setEmail] = useState('');
@@ -29,9 +30,6 @@ function Login() {
   const { iniciarSesion } = useAuth();
   const navigate = useNavigate();
 
-  const fecha = new Date()
-    .toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })
-    .toUpperCase();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -106,15 +104,27 @@ function Login() {
 
   return (
     <div className="login-screen">
-      <div className="login-card">
-        <div className="login-badge">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            <path d="M9 12l2 2 4-4" />
-          </svg>
+      <aside className="login-aside">
+        <div className="login-aside-brand">
+          <img src="/favicon-192.png" alt="" width="44" height="44" />
+          <div className="login-brand-text">
+            <span className="login-brand-name">Rinde</span>
+            <span className="login-brand-slogan">Tus ingresos y gastos de ruta, claros.</span>
+          </div>
         </div>
 
-        <span className="login-eyebrow">TURNO · {fecha}</span>
+        <LoginCarousel />
+      </aside>
+
+      <main className="login-main">
+      <div className="login-card">
+        <div className="login-mobile-brand">
+          <img src="/favicon-192.png" alt="" width="36" height="36" />
+          <div className="login-brand-text">
+            <span className="login-brand-name">Rinde</span>
+            <span className="login-brand-slogan">Tus ingresos y gastos de ruta, claros.</span>
+          </div>
+        </div>
 
         {vista === 'login' ? (
           <>
@@ -122,11 +132,6 @@ function Login() {
             <p className="login-subtitle">
               Ingresa con tu cuenta para registrar tus movimientos del día.
             </p>
-
-            <div className="login-route" aria-hidden="true">
-              <span className="login-route-line" />
-              <span className="login-route-pin" />
-            </div>
 
             <form className="login-form" onSubmit={handleSubmit} noValidate>
               <label className="login-field">
@@ -203,11 +208,6 @@ function Login() {
             <p className="login-subtitle">
               Completa tus datos. Un administrador revisará tu solicitud antes de habilitar tu cuenta.
             </p>
-
-            <div className="login-route" aria-hidden="true">
-              <span className="login-route-line" />
-              <span className="login-route-pin" />
-            </div>
 
             {regExito ? (
               <p className="login-success" role="status">
@@ -315,6 +315,7 @@ function Login() {
           <Link to="/terminos" className="login-link">Términos</Link>
         </p>
       </div>
+      </main>
     </div>
   );
 }

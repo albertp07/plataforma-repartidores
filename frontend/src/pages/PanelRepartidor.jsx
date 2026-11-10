@@ -24,15 +24,31 @@ const IVA = 0.19;
 const VALOR_PAQUETE_DEFAULT = 1500;
 
 const MODOS_INGRESO = [
-  { id: 'PAQUETES', icono: '📦', label: 'Reparto de Paquetes', sub: 'Entregas del día' },
-  { id: 'RETIROS', icono: '📥', label: 'Retiros', sub: 'Colecta antes de repartir' },
+  { id: 'PAQUETES', icono: 'paquete', label: 'Reparto de Paquetes', sub: 'Entregas del día' },
+  { id: 'RETIROS', icono: 'retiro', label: 'Retiros', sub: 'Colecta antes de repartir' },
 ];
 
 const CATEGORIAS_GASTO = [
-  { id: 'BENCINA', icono: '⛽', label: 'Bencina / Combustible', sub: 'Carga de combustible' },
-  { id: 'MANTENCION', icono: '🔧', label: 'Mantención Furgón', sub: 'Peajes, lavado, aceite, repuestos' },
-  { id: 'OTROS', icono: '📦', label: 'Otros Gastos', sub: 'Almuerzo, insumos, etc.' },
+  { id: 'BENCINA', icono: 'bencina', label: 'Bencina / Combustible', sub: 'Carga de combustible' },
+  { id: 'MANTENCION', icono: 'mantencion', label: 'Mantención Furgón', sub: 'Peajes, lavado, aceite, repuestos' },
+  { id: 'OTROS', icono: 'otros', label: 'Otros Gastos', sub: 'Almuerzo, insumos, etc.' },
 ];
+
+const TRAZOS_ICONO = {
+  paquete: <><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  retiro: <><path d="M12 3v12M7 10l5 5 5-5" /><path d="M4 19h16" /></>,
+  bencina: <><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" /><path d="M3 21h12M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h4" /></>,
+  mantencion: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />,
+  otros: <><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2V3z" /><path d="M9 8h6M9 12h6" /></>,
+};
+
+function IconoCategoria({ nombre }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {TRAZOS_ICONO[nombre]}
+    </svg>
+  );
+}
 
 const DETALLES_MANTENCION = ['Peajes', 'Lavado', 'Cambio de aceite', 'Repuestos', 'Mecánica', 'Otro'];
 
@@ -653,9 +669,12 @@ function PanelRepartidor() {
       <ChatAsistente />
       <div className="app-container">
         <div className="app-topbar">
-          <div>
-            <h1>Panel del Repartidor</h1>
-            <p className="app-user">Bienvenido, {usuario?.nombre}</p>
+          <div className="app-brand">
+            <img className="app-brand-logo" src="/favicon-192.png" alt="" width="44" height="44" />
+            <div>
+              <h1>Panel del Repartidor</h1>
+              <p className="app-user">Hola, {usuario?.nombre}</p>
+            </div>
           </div>
           <div className="topbar-actions">
             {usuario?.rol === 'ADMIN' && (
@@ -771,7 +790,7 @@ function PanelRepartidor() {
                         className={`category-btn ${modoIngreso === modo.id ? 'active' : ''}`}
                         onClick={() => setModoIngreso(modo.id)}
                       >
-                        <span className="category-icon">{modo.icono}</span>
+                        <span className="category-icon"><IconoCategoria nombre={modo.icono} /></span>
                         <span className="category-label">{modo.label}</span>
                         <span className="category-sub">{modo.sub}</span>
                       </button>
@@ -1021,7 +1040,7 @@ function PanelRepartidor() {
                         className={`category-btn ${categoriaGasto === cat.id ? 'active' : ''}`}
                         onClick={() => setCategoriaGasto(cat.id)}
                       >
-                        <span className="category-icon">{cat.icono}</span>
+                        <span className="category-icon"><IconoCategoria nombre={cat.icono} /></span>
                         <span className="category-label">{cat.label}</span>
                         <span className="category-sub">{cat.sub}</span>
                       </button>
