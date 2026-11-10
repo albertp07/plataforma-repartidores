@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const prisma = require('../config/prisma');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const { limpiarCambios, aplicarCambiosPerfil } = require('../services/perfilAdminService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -250,10 +251,185 @@ async function actualizarEstado(req, res) {
   }
 }
 
+const SELECT_USUARIO_ADMIN = {
+  id: true,
+  nombre: true,
+  email: true,
+  rol: true,
+  estado: true,
+  creadoEn: true,
+  googleId: true,
+  repartidor: { select: { telefono: true, vehiculo: true } },
+};
+
+// Admin: lista todos los usuarios (nunca devuelve el hash de la contraseña).
+async function listarUsuarios(req, res) {
+  try {
+    const usuarios = await prisma.usuario.findMany({
+      select: SELECT_USUARIO_ADMIN,
+      orderBy: { nombre: 'asc' },
+    });
+
+    // No exponemos el googleId; solo si la cuenta está vinculada a Google.
+    res.json(usuarios.map(({ googleId, ...u }) => ({ ...u, tieneGoogle: Boolean(googleId) })));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al listar usuarios' });
+  }
+}
+
+// Admin: edita los datos de cualquier usuario (nombre, email, teléfono, vehículo,
+// rol, estado y/o contraseña). Solo se modifican los campos que vienen en el body.
+async function actualizarUsuarioAdmin(req, res) {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const { email, password, rol, estado } = req.body;
+    const cambiosPerfil = limpiarCambios(req.body);
+
+    const existente = await prisma.usuario.findUnique({ where: { id } });
+    if (!existente) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (cambiosPerfil.nombre !== undefined && cambiosPerfil.nombre === '') {
+      return res.status(400).json({ error: 'El nombre no puede estar vacío' });
+    }
+
+    const dataUsuario = {};
+
+    if (email !== undefined) {
+      const emailLimpio = String(email).trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+        return res.status(400).json({ error: 'Email inválido' });
+      }
+      if (emailLimpio !== existente.email) {
+        dataUsuario.email = emailLimpio;
+      }
+    }
+
+    if (password !== undefined && password !== '') {
+      if (String(password).length < 6) {
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+      dataUsuario.password = await bcrypt.hash(String(password), 10);
+    }
+
+    if (rol !== undefined) {
+      if (!['ADMIN', 'REPARTIDOR'].includes(rol)) {
+        return res.status(400).json({ error: 'Rol inválido' });
+      }
+      dataUsuario.rol = rol;
+    }
+
+    if (estado !== undefined) {
+      if (!['PENDIENTE', 'ACTIVO', 'RECHAZADO'].includes(estado)) {
+        return res.status(400).json({ error: 'Estado inválido' });
+      }
+      dataUsuario.estado = estado;
+    }
+
+    // Evita que un admin se bloquee a sí mismo (quitarse el rol o desactivarse).
+    if (id === req.usuario.id) {
+      if (dataUsuario.rol && dataUsuario.rol !== 'ADMIN') {
+        return res.status(400).json({ error: 'No puedes quitarte tu propio rol de administrador' });
+      }
+      if (dataUsuario.estado && dataUsuario.estado !== 'ACTIVO') {
+        return res.status(400).json({ error: 'No puedes desactivar tu propia cuenta' });
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (Object.keys(dataUsuario).length > 0) {
+        await tx.usuario.update({ where: { id }, data: dataUsuario });
+      }
+      await aplicarCambiosPerfil(tx, id, cambiosPerfil);
+    });
+
+    const actualizado = await prisma.usuario.findUnique({
+      where: { id },
+      select: SELECT_USUARIO_ADMIN,
+    });
+    const { googleId, ...resto } = actualizado;
+
+    res.json({ ...resto, tieneGoogle: Boolean(googleId) });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Ese email ya está registrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el usuario' });
+  }
+}
+
+// Admin: elimina definitivamente un usuario. Solo se permite si no tiene
+// transacciones registradas (para no romper balances ni historial financiero);
+// en ese caso se recomienda cambiar su estado a RECHAZADO (desactivarlo).
+async function eliminarUsuarioAdmin(req, res) {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    if (id === req.usuario.id) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+    }
+
+    const existente = await prisma.usuario.findUnique({
+      where: { id },
+      include: { repartidor: { select: { id: true } } },
+    });
+    if (!existente) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (existente.repartidor) {
+      const cantidadTransacciones = await prisma.transaccion.count({
+        where: { repartidorId: existente.repartidor.id },
+      });
+      if (cantidadTransacciones > 0) {
+        return res.status(409).json({
+          error: `Este usuario tiene ${cantidadTransacciones} transacción(es) registradas y no se puede eliminar sin perder el historial financiero. Cámbialo a estado "Rechazado / desactivado" en su lugar.`,
+        });
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (existente.repartidor) {
+        await tx.puntoRetiro.deleteMany({ where: { repartidorId: existente.repartidor.id } });
+        await tx.repartidor.delete({ where: { id: existente.repartidor.id } });
+      }
+      // Las solicitudes de cambio se eliminan en cascada (onDelete: Cascade).
+      await tx.usuario.delete({ where: { id } });
+    });
+
+    res.json({ ok: true, id });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    if (error.code === 'P2003') {
+      return res.status(409).json({ error: 'El usuario tiene registros asociados y no se puede eliminar' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el usuario' });
+  }
+}
+
 module.exports = {
   registrarUsuario,
   login,
   loginConGoogle,
   listarPendientes,
   actualizarEstado,
+  listarUsuarios,
+  actualizarUsuarioAdmin,
+  eliminarUsuarioAdmin,
 };

@@ -9,6 +9,7 @@ const reporteRoutes = require('./routes/reporteRoutes');
 const puntoRetiroRoutes = require('./routes/puntoRetiroRoutes');
 const capturaRoutes = require('./routes/capturaRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const solicitudCambioRoutes = require('./routes/solicitudCambioRoutes');
 require('dotenv').config();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -26,6 +27,7 @@ app.use('/capturas', capturaRoutes);
 app.use('/chat', chatRoutes);
 app.use('/repartidores', repartidorRoutes);
 app.use('/usuarios', usuarioRoutes);
+app.use('/solicitudes-cambio', solicitudCambioRoutes);
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API de Plataforma de Repartidores funcionando 🚀' });

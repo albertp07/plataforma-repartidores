@@ -23,6 +23,7 @@ model Usuario {
   estado       EstadoUsuario @default(PENDIENTE)
   creadoEn     DateTime      @default(now())
   repartidor   Repartidor?
+  solicitudesCambio SolicitudCambio[]
 }
 
 enum Rol {
@@ -112,4 +113,30 @@ model DetalleRetiro {
   precio        Decimal      @db.Decimal(10, 2)
 
   @@index([transaccionId])
+}
+
+
+// Solicitudes de cambio de datos de perfil. El repartidor NO edita sus datos
+// directamente: pide el cambio y un administrador lo aprueba (se aplica) o rechaza.
+// "cambios" guarda solo los campos propuestos (nombre, telefono, vehiculo).
+// "mensaje" es texto libre para pedidos que el admin resuelve a mano (ej. contraseña, email).
+model SolicitudCambio {
+  id          Int             @id @default(autoincrement())
+  usuarioId   Int
+  usuario     Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cambios     Json
+  mensaje     String?
+  estado      EstadoSolicitud @default(PENDIENTE)
+  respuesta   String?
+  creadoEn    DateTime        @default(now())
+  resueltoEn  DateTime?
+
+  @@index([usuarioId])
+  @@index([estado])
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
 }

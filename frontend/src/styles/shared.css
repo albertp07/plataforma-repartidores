@@ -486,9 +486,10 @@
   }
   
   .badge-neutral {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--ink-soft);
+    background: #FFFFFF;
+    border: 1px solid #C5CCD5;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   }
   
   .badge-amber {
@@ -1299,7 +1300,7 @@
   font-size: 13px;
 }
 
-.badge-neutral { background: var(--hover); border-color: transparent; color: var(--ink-soft); }
+.badge-neutral { background: #FFFFFF; border-color: #C5CCD5; color: var(--ink); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
 .badge-amber { background: var(--brand-wash); border-color: transparent; color: var(--brand-ink); }
 .badge-green { background: var(--ok-wash); border-color: transparent; color: var(--ok); }
 .badge-sky { background: var(--info-wash); border-color: transparent; color: var(--info); }

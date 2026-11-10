@@ -57,6 +57,44 @@ const ESTRELLAS = [
   { x: -178, y: 6, s: 10, dl: 0.42 }, { x: 176, y: 8, s: 12, dl: 0.5 },
 ];
 
+/* Versión compacta de la celebración, para totales dentro de una fila (Entregas) */
+const CHISPAS_SM = Array.from({ length: 14 }, (_, i) => ({
+  a: i * (360 / 14) + (i % 2 ? 5 : -5),
+  r: [44, 60, 76][i % 3],
+  c: ['#F7A600', '#FFC23D', '#16A57A', '#36C096'][i % 4],
+  dot: i % 3 === 1,
+}));
+
+const ESTRELLAS_SM = [
+  { x: -70, y: -22, s: 12, dl: 0.05 }, { x: 66, y: -26, s: 10, dl: 0.15 },
+  { x: -48, y: 24, s: 9, dl: 0.25 }, { x: 52, y: 22, s: 13, dl: 0.1 },
+  { x: 0, y: -34, s: 9, dl: 0.3 },
+];
+
+/* Anillos + chispas + estrellas. Se centra en su contenedor posicionado; el retraso viene de --d. */
+function Explosion({ chispas, estrellas, pequena }) {
+  return (
+    <span className={`lc-burst${pequena ? ' lc-burst-sm' : ''}`} aria-hidden="true">
+      <i className="lc-ring lc-ring-a" />
+      <i className="lc-ring lc-ring-b" />
+      {chispas.map((c, i) => (
+        <i
+          key={`c${i}`}
+          className={`lc-spark${c.dot ? ' lc-spark-dot' : ''}`}
+          style={{ '--a': `${c.a}deg`, '--r': `${c.r}px`, '--c': c.c, '--o': `${(i % 5) * 0.025}s` }}
+        />
+      ))}
+      {estrellas.map((e, i) => (
+        <i
+          key={`e${i}`}
+          className="lc-star"
+          style={{ '--x': `${e.x}px`, '--y': `${e.y}px`, '--sz': `${e.s}px`, '--o': `${e.dl}s` }}
+        />
+      ))}
+    </span>
+  );
+}
+
 /* 1 · Balance: se arma en tres pasos (ingresos → gastos → neto) */
 function VisualBalance({ activa }) {
   return (
@@ -94,24 +132,7 @@ function VisualBalance({ activa }) {
             <i className="lc-glint" aria-hidden="true" />
           </div>
 
-          <div className="lc-burst" aria-hidden="true">
-            <i className="lc-ring lc-ring-a" />
-            <i className="lc-ring lc-ring-b" />
-            {CHISPAS.map((c, i) => (
-              <i
-                key={`c${i}`}
-                className={`lc-spark${c.dot ? ' lc-spark-dot' : ''}`}
-                style={{ '--a': `${c.a}deg`, '--r': `${c.r}px`, '--c': c.c, '--o': `${(i % 5) * 0.025}s` }}
-              />
-            ))}
-            {ESTRELLAS.map((e, i) => (
-              <i
-                key={`e${i}`}
-                className="lc-star"
-                style={{ '--x': `${e.x}px`, '--y': `${e.y}px`, '--sz': `${e.s}px`, '--o': `${e.dl}s` }}
-              />
-            ))}
-          </div>
+          <Explosion chispas={CHISPAS} estrellas={ESTRELLAS} />
         </div>
 
         <span className="lc-badge lc-step" style={d(6.1)}>
@@ -164,7 +185,14 @@ function VisualEntregas({ activa }) {
       <div className="lc-sep lc-step" style={d(5.1)} />
       <div className="lc-row lc-row-strong lc-row-ok lc-step" style={d(5.2)}>
         <span>Total bruto</span>
-        <span className="lc-row-val"><Contador activa={activa} hasta={59976} delay={5350} dur={1000} /></span>
+        {/* El total aterriza a los ~6,35 s (5,35 + 1,0): ahí se dispara la celebración compacta */}
+        <span className="lc-boomwrap" style={d(6.35)}>
+          <span className="lc-row-val lc-boomsm">
+            <Contador activa={activa} hasta={59976} delay={5350} dur={1000} />
+            <i className="lc-glint" aria-hidden="true" />
+          </span>
+          <Explosion chispas={CHISPAS_SM} estrellas={ESTRELLAS_SM} pequena />
+        </span>
       </div>
     </div>
   );

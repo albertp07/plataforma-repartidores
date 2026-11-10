@@ -4,6 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { login, registrar, loginConGoogle } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import LoginCarousel from '../components/LoginCarousel';
+import PasswordInput from '../components/PasswordInput';
 import './Login.css';
 
 function Login() {
@@ -159,8 +160,7 @@ function Login() {
                     <rect x="3" y="11" width="18" height="11" rx="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
@@ -248,8 +248,7 @@ function Login() {
                 <label className="login-field">
                   <span className="login-label">Contraseña</span>
                   <span className="login-input-wrap">
-                    <input
-                      type="password"
+                    <PasswordInput
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="••••••••"

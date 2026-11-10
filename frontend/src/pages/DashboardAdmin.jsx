@@ -3,6 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { obtenerTodasLasTransacciones, eliminarTransaccion } from '../services/transaccionService';
 import { obtenerUsuariosPendientes, actualizarEstadoUsuario } from '../services/usuarioService';
+import { obtenerSolicitudesCambio } from '../services/solicitudCambioService';
+import AdminUsuarios from '../components/AdminUsuarios';
+import AdminSolicitudesCambio from '../components/AdminSolicitudesCambio';
 import ModalConfirmar from '../components/ModalConfirmar';
 import SelectorFecha from '../components/SelectorFecha';
 import ChatAsistente from '../components/ChatAsistente';
@@ -39,6 +42,8 @@ const TURNOS_FILTRO = [
 const TABS = [
   { id: 'RESUMEN', label: 'Resumen' },
   { id: 'PENDIENTES', label: 'Solicitudes Pendientes' },
+  { id: 'USUARIOS', label: 'Usuarios' },
+  { id: 'CAMBIOS', label: 'Cambios de Datos' },
 ];
 
 function formatoPeso(valor) {
@@ -166,6 +171,7 @@ function DashboardAdmin() {
   const [cargandoPendientes, setCargandoPendientes] = useState(true);
   const [procesandoId, setProcesandoId] = useState(null);
   const [errorPendientes, setErrorPendientes] = useState('');
+  const [cambiosPendientes, setCambiosPendientes] = useState(0);
 
   useEffect(() => {
     document.title = 'Aryal - Dashboard';
@@ -174,6 +180,7 @@ function DashboardAdmin() {
   useEffect(() => {
     cargarDatos();
     cargarPendientes();
+    cargarContadorCambios();
   }, []);
 
   async function cargarDatos() {
@@ -184,6 +191,15 @@ function DashboardAdmin() {
       console.error(err);
     } finally {
       setCargando(false);
+    }
+  }
+
+  async function cargarContadorCambios() {
+    try {
+      const data = await obtenerSolicitudesCambio();
+      setCambiosPendientes(data.filter((s) => s.estado === 'PENDIENTE').length);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -434,11 +450,16 @@ function DashboardAdmin() {
             >
               {t.label}
               {t.id === 'PENDIENTES' && pendientes.length > 0 ? ` (${pendientes.length})` : ''}
+              {t.id === 'CAMBIOS' && cambiosPendientes > 0 ? ` (${cambiosPendientes})` : ''}
             </button>
           ))}
         </div>
 
-        {tab === 'PENDIENTES' ? (
+        {tab === 'USUARIOS' ? (
+          <AdminUsuarios />
+        ) : tab === 'CAMBIOS' ? (
+          <AdminSolicitudesCambio onActualizado={cargarContadorCambios} />
+        ) : tab === 'PENDIENTES' ? (
           <>
             <p className="section-title">Solicitudes Pendientes</p>
             {errorPendientes && (

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { obtenerMiPerfil, crearPerfil, actualizarMiPerfil } from '../services/repartidorService';
+import { obtenerMiPerfil, crearPerfil } from '../services/repartidorService';
+import { crearSolicitudCambio, obtenerMisSolicitudes } from '../services/solicitudCambioService';
 import {
   obtenerMisTransacciones,
   crearTransaccion,
@@ -192,7 +193,7 @@ function calcularResumen(lista) {
 }
 
 function PanelRepartidor() {
-  const { usuario, cerrarSesion, actualizarUsuario } = useAuth();
+  const { usuario, cerrarSesion } = useAuth();
   const navigate = useNavigate();
 
   const [perfil, setPerfil] = useState(null);
@@ -202,6 +203,7 @@ function PanelRepartidor() {
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [errorPerfil, setErrorPerfil] = useState('');
   const [exitoPerfil, setExitoPerfil] = useState('');
+  const [solicitudesCambio, setSolicitudesCambio] = useState([]);
 
   const [telefono, setTelefono] = useState('');
   const [vehiculo, setVehiculo] = useState('');
@@ -360,23 +362,33 @@ function PanelRepartidor() {
     setErrorPerfil('');
     setExitoPerfil('');
     setMostrarModalPerfil(true);
+    cargarSolicitudesCambio();
+  }
+
+  async function cargarSolicitudesCambio() {
+    try {
+      setSolicitudesCambio(await obtenerMisSolicitudes());
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   function handleCerrarPerfil() {
     setMostrarModalPerfil(false);
   }
 
-  async function handleGuardarPerfil(datos) {
+  async function handleSolicitarCambio(datos) {
     setGuardandoPerfil(true);
     setErrorPerfil('');
     setExitoPerfil('');
     try {
-      const resultado = await actualizarMiPerfil(datos);
-      actualizarUsuario({ nombre: resultado.usuario.nombre });
-      await cargarPerfil();
-      setExitoPerfil('Perfil actualizado correctamente');
+      await crearSolicitudCambio(datos);
+      await cargarSolicitudesCambio();
+      setExitoPerfil('Solicitud enviada. El administrador la revisará.');
+      return true;
     } catch (err) {
-      setErrorPerfil(err.response?.data?.error || 'Error al actualizar el perfil');
+      setErrorPerfil(err.response?.data?.error || 'Error al enviar la solicitud');
+      return false;
     } finally {
       setGuardandoPerfil(false);
     }
@@ -1362,9 +1374,10 @@ function PanelRepartidor() {
         usuario={usuario}
         telefonoInicial={perfil?.telefono}
         vehiculoInicial={perfil?.vehiculo}
-        onGuardar={handleGuardarPerfil}
+        solicitudes={solicitudesCambio}
+        onSolicitar={handleSolicitarCambio}
         onCancelar={handleCerrarPerfil}
-        guardando={guardandoPerfil}
+        enviando={guardandoPerfil}
         error={errorPerfil}
         exito={exitoPerfil}
       />
