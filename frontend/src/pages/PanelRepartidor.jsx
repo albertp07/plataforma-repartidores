@@ -17,8 +17,12 @@ import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
 import ChatAsistente from '../components/ChatAsistente';
+import TabSelector from '../components/TabSelector';
 import usePuntosRetiro from '../hooks/usePuntosRetiro';
 import '../styles/shared.css';
+import '../styles/ux-movil.css';
+import CantidadStepper from '../components/CantidadStepper';
+import BarraResumen from '../components/BarraResumen';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
 
 const IVA = 0.19;
@@ -738,17 +742,12 @@ function PanelRepartidor() {
           </div>
         ) : (
           <>
-            <div className="period-selector">
-              {PERIODOS.map((p) => (
-                <button
-                  key={p.id}
-                  className={`period-btn ${periodo === p.id ? 'active' : ''}`}
-                  onClick={() => setPeriodo(p.id)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <TabSelector
+              label="Período"
+              value={periodo}
+              onChange={setPeriodo}
+              options={PERIODOS}
+            />
 
             <div className="stat-grid">
               <div className="stat-card green">
@@ -846,43 +845,37 @@ function PanelRepartidor() {
 
                       {!sinReparto && (
                       <>
-                      <div className="field-row">
+                      <div className="field-row field-row-cantidades">
                         <div className="field">
                           <span className="field-label">Entregas exitosas</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="9999"
+                          <CantidadStepper
+                            ariaLabel="Entregas exitosas"
                             value={entregasExitosas}
-                            onChange={(e) => setEntregasExitosas(limitarCantidad(e.target.value))}
-                            placeholder="Ej: 45"
+                            onChange={(v) => setEntregasExitosas(limitarCantidad(v))}
+                            placeholder="0"
                             required
                           />
                         </div>
 
                         <div className="field">
                           <span className="field-label">Entregas fallidas</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="9999"
+                          <CantidadStepper
+                            ariaLabel="Entregas fallidas"
                             value={entregasFallidas}
-                            onChange={(e) => setEntregasFallidas(limitarCantidad(e.target.value))}
-                            placeholder="Ej: 5"
+                            onChange={(v) => setEntregasFallidas(limitarCantidad(v))}
+                            placeholder="0"
                           />
                         </div>
-                      </div>
 
-                      <div className="field">
-                        <span className="field-label">Paquetes sobredimensionados (opcional)</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="9999"
-                          value={paquetesSobredimensionados}
-                          onChange={(e) => setPaquetesSobredimensionados(limitarCantidad(e.target.value))}
-                          placeholder="Ej: 1"
-                        />
+                        <div className="field">
+                          <span className="field-label">Sobredimensionados (opcional)</span>
+                          <CantidadStepper
+                            ariaLabel="Paquetes sobredimensionados"
+                            value={paquetesSobredimensionados}
+                            onChange={(v) => setPaquetesSobredimensionados(limitarCantidad(v))}
+                            placeholder="0"
+                          />
+                        </div>
                       </div>
 
                       <div className="field">
@@ -913,32 +906,18 @@ function PanelRepartidor() {
                         />
                       </div>
 
-                      {!sinReparto && (
-                      <div className="calc-summary">
-                        <div className="calc-row">
-                          <span>Paquetes totales al salir</span>
-                          <span>{totalSalida}</span>
-                        </div>
-                        <div className="calc-row">
-                          <span>
-                            Líquido ({exitosas} entregados{sobredimensionados > 0 ? ` + ${sobredimensionados} sobredimensionados` : ''} × ${formatoPeso(valorUnitario)})
-                          </span>
-                          <span>${formatoPeso(liquido)}</span>
-                        </div>
-                        <div className="calc-row">
-                          <span>IVA (19%)</span>
-                          <span>${formatoPeso(iva)}</span>
-                        </div>
-                        <div className="calc-row calc-total">
-                          <span>Bruto total</span>
-                          <span>${formatoPeso(bruto)}</span>
-                        </div>
-                      </div>
-                      )}
-
-                      <button type="submit" className="btn-primary" disabled={guardando || turnoRutaOcupado}>
-                        {guardando ? 'Guardando...' : sinReparto ? 'Registrar día sin reparto' : 'Guardar ruta'}
-                      </button>
+                      <BarraResumen
+                        mostrarMontos={!sinReparto}
+                        liquido={liquido}
+                        iva={iva}
+                        bruto={bruto}
+                        detalle={`${exitosas + sobredimensionados} entregados × $${formatoPeso(valorUnitario)}`}
+                        formato={formatoPeso}
+                        guardando={guardando}
+                        deshabilitado={turnoRutaOcupado}
+                        error={error}
+                        textoBoton={sinReparto ? 'Registrar día sin reparto' : 'Guardar ruta'}
+                      />
                     </form>
                   ) : (
                     <form onSubmit={handleGuardarRetiro}>
@@ -1005,26 +984,18 @@ function PanelRepartidor() {
                         />
                       </div>
 
-                      {!sinRetiro && (
-                      <div className="calc-summary">
-                        <div className="calc-row">
-                          <span>Líquido ({retiros} {retiros === 1 ? 'retiro' : 'retiros'})</span>
-                          <span>${formatoPeso(liquidoRetiro)}</span>
-                        </div>
-                        <div className="calc-row">
-                          <span>IVA (19%)</span>
-                          <span>${formatoPeso(ivaRetiro)}</span>
-                        </div>
-                        <div className="calc-row calc-total">
-                          <span>Bruto total</span>
-                          <span>${formatoPeso(brutoRetiro)}</span>
-                        </div>
-                      </div>
-                      )}
-
-                      <button type="submit" className="btn-primary" disabled={guardando || turnoRetiroOcupado}>
-                        {guardando ? 'Guardando...' : sinRetiro ? 'Registrar día sin retiro' : 'Guardar retiro'}
-                      </button>
+                      <BarraResumen
+                        mostrarMontos={!sinRetiro}
+                        liquido={liquidoRetiro}
+                        iva={ivaRetiro}
+                        bruto={brutoRetiro}
+                        detalle={`${retiros} ${retiros === 1 ? 'retiro' : 'retiros'}`}
+                        formato={formatoPeso}
+                        guardando={guardando}
+                        deshabilitado={turnoRetiroOcupado}
+                        error={error}
+                        textoBoton={sinRetiro ? 'Registrar día sin retiro' : 'Guardar retiro'}
+                      />
                     </form>
                   )}
                 </>

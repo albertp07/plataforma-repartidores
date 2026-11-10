@@ -31,7 +31,7 @@
 
 .rk-chevron {
   color: var(--ink-soft);
-  transition: transform 0.15s ease;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rk-chevron.rk-abierto {
@@ -110,11 +110,12 @@
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .rk-fila:hover {
   border-color: var(--brand);
+  transform: translateX(2px);
 }
 
 .rk-pos {

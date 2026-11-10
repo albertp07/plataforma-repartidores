@@ -1647,3 +1647,27 @@
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* TabSelector: indicador deslizante (motion layoutId) */
+.period-btn.tab-sel {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.period-btn.tab-sel.active {
+  background: transparent;
+  border-color: transparent;
+}
+
+.tab-sel-indicator {
+  position: absolute;
+  inset: -1px;
+  background: var(--carbon);
+  border-radius: inherit;
+  z-index: 0;
+}
+
+.tab-sel-label {
+  position: relative;
+  z-index: 1;
+}

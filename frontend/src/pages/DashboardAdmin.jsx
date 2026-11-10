@@ -9,6 +9,7 @@ import AdminSolicitudesCambio from '../components/AdminSolicitudesCambio';
 import ModalConfirmar from '../components/ModalConfirmar';
 import SelectorFecha from '../components/SelectorFecha';
 import ChatAsistente from '../components/ChatAsistente';
+import TabSelector from '../components/TabSelector';
 import { generarDashboardPdf } from '../utils/exportarPdf';
 import ModalVistaPreviaPdf from '../components/ModalVistaPreviaPdf';
 import {
@@ -441,19 +442,15 @@ function DashboardAdmin() {
           </div>
         </div>
 
-        <div className="period-selector">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`period-btn ${tab === t.id ? 'active' : ''}`}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-              {t.id === 'PENDIENTES' && pendientes.length > 0 ? ` (${pendientes.length})` : ''}
-              {t.id === 'CAMBIOS' && cambiosPendientes > 0 ? ` (${cambiosPendientes})` : ''}
-            </button>
-          ))}
-        </div>
+        <TabSelector
+          label="Secciones del panel"
+          value={tab}
+          onChange={setTab}
+          options={TABS.map((t) => ({
+            id: t.id,
+            label: `${t.label}${t.id === 'PENDIENTES' && pendientes.length > 0 ? ` (${pendientes.length})` : ''}${t.id === 'CAMBIOS' && cambiosPendientes > 0 ? ` (${cambiosPendientes})` : ''}`,
+          }))}
+        />
 
         {tab === 'USUARIOS' ? (
           <AdminUsuarios />
@@ -520,17 +517,12 @@ function DashboardAdmin() {
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-              <div className="period-selector">
-                {PERIODOS.map((p) => (
-                  <button
-                    key={p.id}
-                    className={`period-btn ${periodo === p.id ? 'active' : ''}`}
-                    onClick={() => setPeriodo(p.id)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              <TabSelector
+                label="Período"
+                value={periodo}
+                onChange={setPeriodo}
+                options={PERIODOS}
+              />
               <button
                 type="button"
                 className="btn-primary"
@@ -713,34 +705,23 @@ function DashboardAdmin() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '28px', marginBottom: '14px' }}>
               <p className="section-title" style={{ margin: 0 }}>Todos los movimientos</p>
-              <div className="period-selector" style={{ margin: 0 }}>
-                <button
-                  type="button"
-                  className={`period-btn ${modoMovimientos === 'SEMANA' ? 'active' : ''}`}
-                  onClick={() => setModoMovimientos('SEMANA')}
-                >
-                  Por semana
-                </button>
-                <button
-                  type="button"
-                  className={`period-btn ${modoMovimientos === 'RANGO' ? 'active' : ''}`}
-                  onClick={() => setModoMovimientos('RANGO')}
-                >
-                  Rango de fechas
-                </button>
-              </div>
-              <div className="period-selector" style={{ margin: 0 }} role="group" aria-label="Filtrar por turno">
-                {TURNOS_FILTRO.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    className={`period-btn ${filtroTurno === f.id ? 'active' : ''}`}
-                    onClick={() => setFiltroTurno(f.id)}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+              <TabSelector
+                label="Modo de movimientos"
+                style={{ margin: 0 }}
+                value={modoMovimientos}
+                onChange={setModoMovimientos}
+                options={[
+                  { id: 'SEMANA', label: 'Por semana' },
+                  { id: 'RANGO', label: 'Rango de fechas' },
+                ]}
+              />
+              <TabSelector
+                label="Filtrar por turno"
+                style={{ margin: 0 }}
+                value={filtroTurno}
+                onChange={setFiltroTurno}
+                options={TURNOS_FILTRO}
+              />
               {filtroTurno !== 'TODOS' && (
                 <span className="turno-nota">Los gastos no se asignan a un turno.</span>
               )}
