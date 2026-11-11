@@ -17,7 +17,26 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS: en producción define CORS_ORIGINS con los dominios permitidos, separados por coma
+// Ej: CORS_ORIGINS=https://repartidores.aryalspa.com
+const origenesPermitidos = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+app.use(
+  cors(
+    origenesPermitidos.length
+      ? {
+          origin: (origin, cb) => {
+            // Sin origin = herramientas como curl/healthchecks
+            if (!origin || origenesPermitidos.includes(origin)) return cb(null, true);
+            return cb(new Error('Origen no permitido por CORS'));
+          },
+        }
+      : undefined // desarrollo local: permite todo
+  )
+);
 app.use(express.json());
 
 app.use('/reportes', reporteRoutes);
@@ -28,6 +47,11 @@ app.use('/chat', chatRoutes);
 app.use('/repartidores', repartidorRoutes);
 app.use('/usuarios', usuarioRoutes);
 app.use('/solicitudes-cambio', solicitudCambioRoutes);
+
+// Healthcheck para Render / monitores de uptime
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API de Plataforma de Repartidores funcionando 🚀' });
