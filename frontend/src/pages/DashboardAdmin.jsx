@@ -10,6 +10,7 @@ import ModalConfirmar from '../components/ModalConfirmar';
 import SelectorFecha from '../components/SelectorFecha';
 import ChatAsistente from '../components/ChatAsistente';
 import TabSelector from '../components/TabSelector';
+import EstadoServidor from '../components/EstadoServidor';
 import { generarDashboardPdf } from '../utils/exportarPdf';
 import ModalVistaPreviaPdf from '../components/ModalVistaPreviaPdf';
 import {
@@ -435,6 +436,7 @@ function DashboardAdmin() {
             </div>
           </div>
           <div className="topbar-actions">
+            <EstadoServidor />
             <button className="btn-ghost" onClick={() => navigate('/panel')}>
               Ver Panel Repartidor
             </button>

@@ -23,6 +23,7 @@ import '../styles/shared.css';
 import '../styles/ux-movil.css';
 import CantidadStepper from '../components/CantidadStepper';
 import BarraResumen from '../components/BarraResumen';
+import EstadoServidor from '../components/EstadoServidor';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
 
 const IVA = 0.19;
@@ -693,6 +694,7 @@ function PanelRepartidor() {
             </div>
           </div>
           <div className="topbar-actions">
+            <EstadoServidor />
             {usuario?.rol === 'ADMIN' && (
               <button className="btn-ghost" onClick={() => navigate('/dashboard')}>
                 Ver Dashboard

@@ -5,6 +5,7 @@ import { login, registrar, loginConGoogle } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import LoginCarousel from '../components/LoginCarousel';
 import PasswordInput from '../components/PasswordInput';
+import EstadoServidor from '../components/EstadoServidor';
 import './Login.css';
 
 function Login() {
@@ -118,6 +119,9 @@ function Login() {
       </aside>
 
       <main className="login-main">
+      <div className="estado-servidor-login">
+        <EstadoServidor />
+      </div>
       <div className="login-card">
         <div className="login-mobile-brand">
           <img src="/favicon-192.png" alt="" width="36" height="36" />
