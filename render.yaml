@@ -3,6 +3,7 @@ services:
     name: repartidores-api
     runtime: node
     plan: free
+    region: ohio
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
