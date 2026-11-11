@@ -315,6 +315,10 @@ button:not(:disabled):active,
   animation: mb-sacudida 0.4s ease;
 }
 
+.btn-primary.multiestado[data-estado='error'][data-par='1'] {
+  animation-name: mb-sacudida-b;
+}
+
 .btn-primary.multiestado:disabled[data-estado='guardando'] {
   opacity: 1;
 }
@@ -342,6 +346,14 @@ button:not(:disabled):active,
 }
 
 @keyframes mb-sacudida {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -5px 0; }
+  50% { translate: 5px 0; }
+  75% { translate: -3px 0; }
+}
+
+/* Copia de mb-sacudida: alternar el nombre reinicia la animación si el error se repite */
+@keyframes mb-sacudida-b {
   0%, 100% { translate: 0 0; }
   25% { translate: -5px 0; }
   50% { translate: 5px 0; }

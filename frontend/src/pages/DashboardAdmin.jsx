@@ -916,6 +916,7 @@ function DashboardAdmin() {
         onConfirmar={handleConfirmarEliminar}
         onCancelar={() => setTransaccionAEliminar(null)}
         cargando={eliminando}
+        animacionPapelera
       />
 
       <ModalConfirmar

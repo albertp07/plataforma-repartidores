@@ -1,0 +1,218 @@
+.nf-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+
+.nf-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 28px 32px 36px;
+  box-shadow: var(--shadow-pop);
+}
+
+.nf-escena {
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.nf-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.nf-num {
+  font-family: var(--font-display);
+  font-size: 150px;
+  font-weight: 800;
+  fill: #23272e;
+}
+
+.nf-pin-q {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  fill: #23272e;
+}
+
+.nf-linea {
+  stroke: #f7a600;
+  stroke-width: 3;
+  stroke-dasharray: 18 14;
+  animation: nf-calle 0.8s linear infinite;
+}
+
+.nf-moto {
+  animation: nf-recorrer 7s linear infinite;
+}
+
+.nf-rebote {
+  animation: nf-rebote 0.35s ease-in-out infinite alternate;
+}
+
+.nf-rueda {
+  animation: nf-girar 0.5s linear infinite;
+}
+
+.nf-saludo {
+  opacity: 0;
+  animation: nf-saludo 7s linear infinite;
+}
+
+.nf-mano {
+  animation: nf-mano 0.3s ease-in-out infinite alternate;
+}
+
+.nf-pin {
+  animation: nf-flotar 2s ease-in-out infinite;
+}
+
+.nf-pin-sombra {
+  transform-origin: 240px 124px;
+  animation: nf-sombra 2s ease-in-out infinite;
+}
+
+.nf-caja {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: nf-caja 3.5s ease-in-out infinite;
+}
+
+@keyframes nf-calle {
+  to { stroke-dashoffset: -32; }
+}
+
+@keyframes nf-recorrer {
+  from { transform: translateX(-120px); }
+  to { transform: translateX(520px); }
+}
+
+@keyframes nf-rebote {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+/* Visible solo mientras el furgón pasa bajo la caja (≈31%-64% del recorrido) */
+@keyframes nf-saludo {
+  0%, 28% { opacity: 0; }
+  32%, 62% { opacity: 1; }
+  66%, 100% { opacity: 0; }
+}
+
+@keyframes nf-mano {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(16deg); }
+}
+
+@keyframes nf-girar {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nf-flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes nf-sombra {
+  0%, 100% { transform: scaleX(1); opacity: 0.18; }
+  50% { transform: scaleX(0.7); opacity: 0.1; }
+}
+
+@keyframes nf-caja {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+}
+
+.nf-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-ink);
+  background: var(--brand-wash);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.nf-titulo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.nf-texto {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 auto 24px;
+  max-width: 420px;
+}
+
+.nf-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 24px;
+  border-radius: var(--r-md, 12px);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nf-btn-primario {
+  background: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid var(--brand-strong);
+}
+
+.nf-btn-primario:hover {
+  background: var(--brand-strong);
+}
+
+.nf-btn-secundario {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+.nf-btn-secundario:hover {
+  background: var(--hover);
+}
+
+@media (max-width: 480px) {
+  .nf-card { padding: 20px 20px 28px; }
+  .nf-titulo { font-size: 24px; }
+  .nf-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-linea, .nf-moto, .nf-rebote, .nf-rueda, .nf-pin, .nf-pin-sombra, .nf-caja, .nf-mano {
+    animation: none;
+  }
+  .nf-saludo { animation: none; opacity: 1; }
+  .nf-moto { transform: translateX(330px); }
+}

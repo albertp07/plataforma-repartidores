@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Botón multiestado: reposo → guardando → guardado / error → reposo.
 // Las 4 etiquetas se apilan en la misma celda de un grid (el ancho del botón no salta)
@@ -6,6 +6,48 @@ import { useState, useEffect } from 'react';
 function BotonMultiestado({ guardando, deshabilitado, error, textoBoton }) {
   const [estado, setEstado] = useState('idle');
   const [guardandoPrevio, setGuardandoPrevio] = useState(guardando);
+  // Contador de fallos: permite re-disparar la sacudida si el error se repite
+  const [fallos, setFallos] = useState(0);
+  const btnRef = useRef(null);
+  const errorRef = useRef(error);
+  const guardandoRef = useRef(guardando);
+
+  useEffect(() => {
+    errorRef.current = error;
+    guardandoRef.current = guardando;
+  });
+
+  // Errores que ocurren ANTES de llamar a la API (campos required/min/max nativos
+  // y validaciones con setError en el handler): no pasan por guardando, así que
+  // se detectan escuchando el formulario.
+  useEffect(() => {
+    const form = btnRef.current?.form;
+    if (!form) return undefined;
+    let invalidoPendiente = false;
+    const fallar = () => {
+      setEstado('error');
+      setFallos((n) => n + 1);
+    };
+    // 'invalid' no burbujea: captura. Se dispara una vez por campo, se deduplica.
+    const alInvalido = () => {
+      if (invalidoPendiente) return;
+      invalidoPendiente = true;
+      setTimeout(() => { invalidoPendiente = false; }, 0);
+      fallar();
+    };
+    // Tras el submit, el handler de React ya corrió: si dejó un error y no está guardando, falló.
+    const alEnviar = () => {
+      setTimeout(() => {
+        if (errorRef.current && !guardandoRef.current) fallar();
+      }, 0);
+    };
+    form.addEventListener('invalid', alInvalido, true);
+    form.addEventListener('submit', alEnviar);
+    return () => {
+      form.removeEventListener('invalid', alInvalido, true);
+      form.removeEventListener('submit', alEnviar);
+    };
+  }, []);
 
   // Ajuste de estado durante el render al cambiar `guardando` (sin efecto intermedio)
   if (guardando !== guardandoPrevio) {
@@ -19,7 +61,7 @@ function BotonMultiestado({ guardando, deshabilitado, error, textoBoton }) {
     if (estado !== 'exito' && estado !== 'error') return undefined;
     const t = setTimeout(() => setEstado('idle'), 1800);
     return () => clearTimeout(t);
-  }, [estado]);
+  }, [estado, fallos]);
 
   const items = [
     { id: 'idle', texto: textoBoton, icono: null },
@@ -54,9 +96,11 @@ function BotonMultiestado({ guardando, deshabilitado, error, textoBoton }) {
 
   return (
     <button
+      ref={btnRef}
       type="submit"
       className="btn-primary barra-resumen-btn multiestado"
       data-estado={estado}
+      data-par={fallos % 2}
       disabled={guardando || deshabilitado}
       aria-live="polite"
     >

@@ -5,6 +5,7 @@ import Terminos from '../pages/Terminos';
 import DashboardAdmin from '../pages/DashboardAdmin';
 import PanelRepartidor from '../pages/PanelRepartidor';
 import RutaProtegida from '../components/RutaProtegida';
+import NotFound from '../pages/NotFound';
 
 function AppRouter() {
   return (
@@ -29,6 +30,7 @@ function AppRouter() {
             </RutaProtegida>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

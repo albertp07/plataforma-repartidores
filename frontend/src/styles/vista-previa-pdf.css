@@ -60,3 +60,79 @@
     flex-wrap: wrap;
   }
 }
+
+/* ==========================================================
+   BOTÓN DE DESCARGA ANIMADO (flecha → progreso → check)
+   ========================================================== */
+.btn-descarga {
+  transition: background 0.25s ease, filter 0.15s ease;
+}
+
+.btn-descarga:disabled {
+  opacity: 1; /* mantiene el color pleno durante la animación */
+}
+
+.btn-descarga--listo {
+  background: var(--ok);
+}
+
+.dl-icon {
+  flex-shrink: 0;
+}
+
+.dl-ring-bg {
+  stroke: currentColor;
+  opacity: 0.3;
+}
+
+.dl-ring-progress {
+  stroke: currentColor;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  animation: dl-progreso 0.9s ease-out forwards;
+}
+
+.dl-arrow {
+  animation: dl-flecha 0.9s ease-in-out infinite;
+}
+
+.dl-ok-ring {
+  stroke: currentColor;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  animation: dl-trazo 0.35s ease-out forwards;
+}
+
+.dl-ok-check {
+  stroke: currentColor;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: dl-trazo 0.35s ease-out 0.25s forwards;
+}
+
+@keyframes dl-progreso {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes dl-trazo {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes dl-flecha {
+  0%, 100% { transform: translateY(-1px); }
+  50% { transform: translateY(1.5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-arrow,
+  .dl-ring-progress,
+  .dl-ok-ring,
+  .dl-ok-check {
+    animation-duration: 0.01s;
+    animation-iteration-count: 1;
+  }
+}
