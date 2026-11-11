@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import api from '../services/api';
 
-// Consulta /health del backend. Se usa axios directo (sin el token del interceptor)
+// Consulta /estado del backend (evita el nombre /health, que algunos bloqueadores filtran). Se usa axios directo (sin el token del interceptor)
 // y la misma URL base que el resto de la app.
 const INTERVALO_MS = 30000;
 // El backend gratuito de Render puede tardar hasta ~1 min en despertar
@@ -30,8 +30,10 @@ export function useEstadoServidor() {
     const veniaActivo = estadoRef.current === 'activo';
     if (!veniaActivo) aplicar('verificando');
     try {
-      await axios.get(`${api.defaults.baseURL}/health`, {
+      await axios.get(`${api.defaults.baseURL}/estado`, {
         timeout: veniaActivo ? TIMEOUT_NORMAL_MS : TIMEOUT_ARRANQUE_MS,
+        // Cualquier respuesta (<500) prueba que el servidor está vivo, aunque no tenga /health
+        validateStatus: (codigo) => codigo < 500,
       });
       aplicar('activo');
     } catch {

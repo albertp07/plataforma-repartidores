@@ -49,7 +49,7 @@ app.use('/usuarios', usuarioRoutes);
 app.use('/solicitudes-cambio', solicitudCambioRoutes);
 
 // Healthcheck para Render / monitores de uptime
-app.get('/health', (req, res) => {
+app.get(['/health', '/estado'], (req, res) => {
   res.json({ ok: true });
 });
 
