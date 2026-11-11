@@ -1671,3 +1671,28 @@
   position: relative;
   z-index: 1;
 }
+
+/* Móvil: barra superior sin desbordes (botones en varias filas si hace falta) */
+@media (max-width: 768px) {
+  .app-container {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .app-brand {
+    padding-right: 28px; /* espacio para el punto de estado */
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .topbar-actions .btn-ghost,
+  .topbar-actions .btn-primary {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 13.5px;
+  }
+}

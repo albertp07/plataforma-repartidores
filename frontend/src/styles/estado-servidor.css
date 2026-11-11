@@ -1,79 +1,67 @@
+/* Indicador de estado del servidor: solo un punto de color */
 .estado-servidor {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line, #E2E6EB);
-  background: var(--surface, #fff);
-  color: var(--ink-soft, #46505C);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
 }
-
-.estado-servidor:hover { background: var(--hover, #EEF1F4); }
 
 .estado-servidor__punto {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  flex: 0 0 auto;
   background: var(--ink-faint, #98A2AD);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.estado-servidor__refrescar { opacity: 0.55; flex: 0 0 auto; }
-
-.estado-servidor--activo {
-  background: var(--ok-wash, #E2F4EC);
-  border-color: var(--ok-bright, #16A57A);
-  color: var(--ok, #0B7A5A);
+.estado-servidor--activo .estado-servidor__punto {
+  background: var(--ok-bright, #16A57A);
+  box-shadow: 0 0 0 3px rgba(22, 165, 122, 0.2);
 }
-.estado-servidor--activo .estado-servidor__punto { background: var(--ok-bright, #16A57A); }
 
-.estado-servidor--inactivo {
-  background: var(--bad-wash, #FCEAE8);
-  border-color: var(--bad-bright, #E0493D);
-  color: var(--bad, #C03328);
+.estado-servidor--inactivo .estado-servidor__punto {
+  background: var(--bad-bright, #E0493D);
+  box-shadow: 0 0 0 3px rgba(224, 73, 61, 0.2);
 }
-.estado-servidor--inactivo .estado-servidor__punto { background: var(--bad-bright, #E0493D); }
 
-.estado-servidor--verificando {
-  background: var(--brand-wash, #FFF1D1);
-  border-color: var(--brand, #F7A600);
-  color: var(--brand-ink, #8A5300);
-}
 .estado-servidor--verificando .estado-servidor__punto {
   background: var(--brand, #F7A600);
+  box-shadow: 0 0 0 3px rgba(247, 166, 0, 0.2);
   animation: estado-servidor-pulso 1.2s ease-in-out infinite;
-}
-.estado-servidor--verificando .estado-servidor__refrescar {
-  animation: estado-servidor-giro 1s linear infinite;
 }
 
 @keyframes estado-servidor-pulso {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
 }
-@keyframes estado-servidor-giro { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .estado-servidor--verificando .estado-servidor__punto,
-  .estado-servidor--verificando .estado-servidor__refrescar { animation: none; }
+  .estado-servidor--verificando .estado-servidor__punto { animation: none; }
 }
 
 /* Login: esquina superior derecha */
 .login-main { position: relative; }
 .estado-servidor-login {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
 }
 
-/* En móvil dentro de la barra superior ocupa todo el ancho como los botones */
-@media (max-width: 640px) {
-  .topbar-actions .estado-servidor { width: 100%; box-sizing: border-box; }
+/* Móvil: el punto va en la esquina superior derecha de la barra superior */
+@media (max-width: 768px) {
+  .app-topbar { position: relative; }
+  .app-topbar .estado-servidor {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
 }
