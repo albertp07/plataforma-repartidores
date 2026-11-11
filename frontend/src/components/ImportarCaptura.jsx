@@ -50,9 +50,22 @@ function buscarPunto(cliente, puntos) {
   if (!c) return null;
   const exacto = puntos.find((p) => normalizar(p.nombre) === c);
   if (exacto) return exacto;
+  // Sin espacios ni signos: "Sendu FerozChocolates" == "Sendu Feroz Chocolates"
+  const compacto = (t) => normalizar(t).replace(/[^a-z0-9]/g, '');
+  const cc = compacto(cliente);
+  const sinEspacios = puntos.find((p) => compacto(p.nombre) === cc);
+  if (sinEspacios) return sinEspacios;
+  const contenido = puntos.find((p) => {
+    const n = compacto(p.nombre);
+    return n.length >= 4 && cc.length >= 4 && (n.includes(cc) || cc.includes(n));
+  });
+  if (contenido) return contenido;
+  // Coincidencia por palabras: comparte alguna palabra significativa (ej. "Sendu")
+  const palabras = (t) => normalizar(t).split(/[^a-z0-9]+/).filter((w) => w.length >= 4);
+  const pc = palabras(cliente);
   return puntos.find((p) => {
-    const n = normalizar(p.nombre);
-    return n.length >= 4 && c.length >= 4 && (n.includes(c) || c.includes(n));
+    const pn = palabras(p.nombre);
+    return pc.some((w) => pn.some((x) => x === w || x.includes(w) || w.includes(x)));
   }) || null;
 }
 
@@ -316,6 +329,11 @@ const DiaCaptura = forwardRef(function DiaCaptura(
                     value={fila.zonaNueva}
                     onChange={(e) => cambiarFila(i, { zonaNueva: e.target.value })}
                   />
+                )}
+                {!fila.puntoId && (
+                  <p className="captura-warn" style={{ marginTop: 8, marginBottom: 0 }}>
+                    No encontré "{fila.cliente}" en tu catálogo. Elígelo o créalo, si no este retiro no se registra.
+                  </p>
                 )}
                 {difiere && (
                   <p className="captura-warn" style={{ marginTop: 8, marginBottom: 0 }}>
