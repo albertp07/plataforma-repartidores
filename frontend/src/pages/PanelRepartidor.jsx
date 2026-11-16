@@ -12,6 +12,7 @@ import ModalConfirmar from '../components/ModalConfirmar';
 import ModalPerfil from '../components/ModalPerfil';
 import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
+import SelectPersonalizado from '../components/SelectPersonalizado';
 import ResumenSemana from '../components/ResumenSemana';
 import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
@@ -770,10 +771,15 @@ function PanelRepartidor() {
               <h2>Registrar movimiento</h2>
               <div className="field">
                 <span className="field-label">Tipo</span>
-                <select value={tipo} onChange={(e) => handleCambiarTipo(e.target.value)}>
-                  <option value="INGRESO">Ingreso</option>
-                  <option value="GASTO">Gasto</option>
-                </select>
+                <SelectPersonalizado
+                  ariaLabel="Tipo"
+                  value={tipo}
+                  onChange={handleCambiarTipo}
+                  opciones={[
+                    { value: 'INGRESO', label: 'Ingreso' },
+                    { value: 'GASTO', label: 'Gasto' },
+                  ]}
+                />
               </div>
 
               {tipo === 'INGRESO' ? (
@@ -1118,14 +1124,12 @@ function PanelRepartidor() {
                       {categoriaGasto === 'MANTENCION' && (
                         <div className="field">
                           <span className="field-label">Detalle</span>
-                          <select
+                          <SelectPersonalizado
+                            ariaLabel="Detalle"
                             value={detalleMantencion}
-                            onChange={(e) => setDetalleMantencion(e.target.value)}
-                          >
-                            {DETALLES_MANTENCION.map((d) => (
-                              <option key={d} value={d}>{d}</option>
-                            ))}
-                          </select>
+                            onChange={setDetalleMantencion}
+                            opciones={DETALLES_MANTENCION.map((d) => ({ value: d, label: d }))}
+                          />
                         </div>
                       )}
 
