@@ -94,7 +94,7 @@ async function analizarCaptura(req, res) {
         retiros,
         valorPaquete,
       },
-      referencia: { totalACobrar: totalLeido, neto: netoLeido, netoEntregas, netoRetiros: entero(lectura.netoRetiros) },
+      referencia: { totalACobrar: totalLeido, neto: netoLeido, netoEntregas: entero(lectura.netoEntregas), netoRetiros: entero(lectura.netoRetiros) },
       advertencias,
     });
   } catch (error) {
