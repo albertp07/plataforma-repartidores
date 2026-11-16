@@ -20,6 +20,8 @@ function excedeLimite(usuarioId) {
 }
 
 function entero(valor) {
+  // Number(null) y Number('') dan 0: un dato ausente no debe convertirse en 0
+  if (valor === null || valor === undefined || valor === '') return null;
   const n = Number(valor);
   return Number.isFinite(n) ? Math.round(n) : null;
 }
@@ -40,7 +42,8 @@ async function analizarCaptura(req, res) {
       return res.status(422).json({ error: 'La imagen no parece ser el detalle de un día. Sube la pantalla con la fecha y el "Total a cobrar del día".' });
     }
 
-    const advertencias = [...(lectura.advertencias || [])];
+    // Solo importan total, entregas, sobredimensionados y retiros: se descartan avisos sobre la lista de puntos o los netos
+    const advertencias = (lectura.advertencias || []).filter((a) => !/neto|primeras|lista|puntos? de entrega|visible/i.test(String(a)));
 
     // Fecha
     let fecha = null;
@@ -68,17 +71,8 @@ async function analizarCaptura(req, res) {
     const entregasExitosas = entero(lectura.entregasExitosas);
     if (entregasExitosas == null) advertencias.push('No se pudo leer la cantidad de entregas: ingrésala manualmente.');
 
-    // Valor por paquete inferido: netoEntregas = (exitosas + sobredimensionados) × valor
-    let valorPaquete = VALOR_PAQUETE_DEFAULT;
-    const netoEntregas = entero(lectura.netoEntregas);
-    if (entregasExitosas != null && netoEntregas != null) {
-      const unidades = entregasExitosas + sobredimensionados.length;
-      if (unidades > 0 && netoEntregas % unidades === 0) {
-        valorPaquete = netoEntregas / unidades;
-      } else {
-        advertencias.push('El neto de entregas de la foto no cuadra con la cantidad de entregas: revisa los datos.');
-      }
-    }
+    // El valor por paquete es fijo (1500); el usuario puede cambiarlo en la tarjeta
+    const valorPaquete = VALOR_PAQUETE_DEFAULT;
 
     // Cruce del total: neto + IVA 19% vs lo que muestra la foto
     const totalLeido = entero(lectura.totalACobrar);

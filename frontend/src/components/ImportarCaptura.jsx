@@ -142,6 +142,9 @@ const DiaCaptura = forwardRef(function DiaCaptura(
     const hayRuta = nExitosas + nFallidas > 0;
     const hayRetiros = filasAsignadas.length > 0;
     if (!hayRuta && !hayRetiros && !sinRetiro) return fallo('No hay nada que registrar');
+    if (hayRuta && !paqueteGuardado && valorUnitario <= 0) {
+      return fallo('Ingresa el valor por paquete (mayor a 0)');
+    }
     if (hayRuta && !paqueteGuardado && ocupadosRuta.includes(turnoRuta)) {
       return fallo(`Ya registraste la ruta ${turnoRuta} de esta fecha`);
     }
