@@ -11,6 +11,7 @@ import SelectorFecha from '../components/SelectorFecha';
 import ChatAsistente from '../components/ChatAsistente';
 import TabSelector from '../components/TabSelector';
 import EstadoServidor from '../components/EstadoServidor';
+import MetaMensual from '../components/MetaMensual';
 import { generarDashboardPdf } from '../utils/exportarPdf';
 import ModalVistaPreviaPdf from '../components/ModalVistaPreviaPdf';
 import {
@@ -294,6 +295,11 @@ function DashboardAdmin() {
     return fecha >= limite;
   });
 
+  // Meta del mes: siempre el mes calendario actual, independiente del filtro de período
+  const hoyMeta = new Date();
+  const inicioMesMeta = inicioMesActual();
+  const movimientosMesActual = movimientos.filter((m) => new Date(m.fecha) >= inicioMesMeta);
+
   // "Todos los movimientos": navegación semana por semana (lunes a domingo), independiente del filtro de período
   const { inicio: inicioSemanaVista, fin: finSemanaVista } = rangoSemana(semanaOffset);
   const movDesdeDate = parseDDMMYYYY(movDesde);
@@ -518,6 +524,12 @@ function DashboardAdmin() {
           </>
         ) : (
           <>
+            <MetaMensual
+              transacciones={movimientosMesActual}
+              anio={hoyMeta.getFullYear()}
+              mes={hoyMeta.getMonth()}
+            />
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
               <TabSelector
                 label="Período"
