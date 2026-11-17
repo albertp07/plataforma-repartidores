@@ -10,6 +10,7 @@ const puntoRetiroRoutes = require('./routes/puntoRetiroRoutes');
 const capturaRoutes = require('./routes/capturaRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const solicitudCambioRoutes = require('./routes/solicitudCambioRoutes');
+const paradaRoutes = require('./routes/paradaRoutes');
 require('dotenv').config();
 
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -47,6 +48,7 @@ app.use('/chat', chatRoutes);
 app.use('/repartidores', repartidorRoutes);
 app.use('/usuarios', usuarioRoutes);
 app.use('/solicitudes-cambio', solicitudCambioRoutes);
+app.use('/', paradaRoutes); // /transacciones/:id/paradas y /paradas
 
 // Healthcheck para Render / monitores de uptime
 app.get(['/health', '/estado'], (req, res) => {

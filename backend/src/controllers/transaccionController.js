@@ -164,7 +164,7 @@ async function misTransacciones(req, res) {
 
     const transacciones = await prisma.transaccion.findMany({
       where: { repartidorId: repartidor.id },
-      include: { detallesRetiro: true },
+      include: { detallesRetiro: true, _count: { select: { paradas: true } } },
       orderBy: { fecha: 'desc' },
     });
 

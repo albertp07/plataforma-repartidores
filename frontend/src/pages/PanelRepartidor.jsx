@@ -18,6 +18,7 @@ import MetaSemanal from '../components/MetaSemanal';
 import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
+import ModalParadas from '../components/ModalParadas';
 import ChatAsistente from '../components/ChatAsistente';
 import TabSelector from '../components/TabSelector';
 import usePuntosRetiro from '../hooks/usePuntosRetiro';
@@ -266,6 +267,7 @@ function PanelRepartidor() {
   const [filaExpandida, setFilaExpandida] = useState(null);
   const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
   const [mostrarCaptura, setMostrarCaptura] = useState(false);
+  const [rutaParadas, setRutaParadas] = useState(null); // ruta cuyas paradas se están viendo
 
   useEffect(() => {
     document.title = 'Aryal - Panel Repartidor';
@@ -1291,6 +1293,22 @@ function PanelRepartidor() {
                                     {t.paquetesSobredimensionados} Sobredimensionados
                                   </span>
                                 )}
+                                {t.categoriaIngreso === 'PAQUETES' && (
+                                  <button
+                                    type="button"
+                                    className="badge badge-sky badge-boton"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRutaParadas(t);
+                                    }}
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                      <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" />
+                                      <circle cx="12" cy="9.5" r="2.5" />
+                                    </svg>
+                                    {t._count?.paradas > 0 ? `Ver paradas · ${t._count.paradas}` : 'Agregar paradas'}
+                                  </button>
+                                )}
                                 {t.categoriaIngreso === 'RETIROS' && t.detallesRetiro?.length > 0 ? (
                                   t.detallesRetiro.map((d) => (
                                     <span className="badge badge-neutral" key={d.id}>
@@ -1331,6 +1349,14 @@ function PanelRepartidor() {
           turnosOcupados={(categoria, iso) => turnosRegistrados(categoria, isoADDMMYYYY(iso))}
           onGuardado={cargarTransacciones}
           onCerrar={() => setMostrarCaptura(false)}
+        />
+      )}
+
+      {rutaParadas && (
+        <ModalParadas
+          ruta={rutaParadas}
+          onGuardado={cargarTransacciones}
+          onCerrar={() => setRutaParadas(null)}
         />
       )}
 

@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { normalizarDireccion } = require('./paradasPdfService');
 
 // Consultas agregadas de solo lectura que usa el chatbot como "herramientas".
 // Todos los montos se calculan aquí (nunca el modelo) y se devuelven en pesos CLP enteros.
@@ -209,4 +210,98 @@ async function estadisticasPaquetes(ctx, { desde, hasta } = {}) {
   };
 }
 
-module.exports = { ErrorConsulta, resumenPorPeriodo, totalesPorCategoria, estadisticasPaquetes };
+// Busca paradas por texto (dirección o notas) y rango de fechas. Sin texto, lista las más recientes.
+async function buscarParadas(ctx, { texto, desde, hasta, limite } = {}) {
+  const tope = Math.min(Math.max(parseInt(limite, 10) || 20, 1), 50);
+  const tokens = normalizarDireccion(texto || '').split(' ').filter(Boolean).slice(0, 6);
+
+  const where = {
+    transaccion: {
+      ...(ctx.repartidorId ? { repartidorId: ctx.repartidorId } : {}),
+      fecha: rangoFechas(desde, hasta),
+    },
+    AND: tokens.map((t) => ({
+      OR: [
+        { direccionNormalizada: { contains: t } },
+        { notas: { contains: t, mode: 'insensitive' } },
+      ],
+    })),
+  };
+
+  const [total, paradas] = await Promise.all([
+    prisma.parada.count({ where }),
+    prisma.parada.findMany({
+      where,
+      include: { transaccion: { select: { fecha: true, turno: true } } },
+      orderBy: [{ transaccion: { fecha: 'desc' } }, { orden: 'asc' }],
+      take: tope,
+    }),
+  ]);
+
+  return {
+    totalCoincidencias: total,
+    mostrando: paradas.length,
+    paradas: paradas.map((p) => ({
+      fecha: iso(p.transaccion.fecha),
+      turno: p.transaccion.turno,
+      direccion: p.direccion,
+      hora: p.hora,
+      notas: p.notas,
+      cantidadPaquetes: p.cantidadPaquetes,
+      paquetesFallidos: p.paquetesFallidos,
+    })),
+  };
+}
+
+function minutosATexto(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h > 0 ? `${h} h ${m} min` : `${m} min`;
+}
+
+// Duración de cada ruta con paradas: desde la primera hasta la última hora de llegada registrada
+async function duracionRutas(ctx, { desde, hasta, limite } = {}) {
+  const tope = Math.min(Math.max(parseInt(limite, 10) || 15, 1), MAX_FILAS);
+
+  const rutas = await prisma.transaccion.findMany({
+    where: {
+      ...(ctx.repartidorId ? { repartidorId: ctx.repartidorId } : {}),
+      tipo: 'INGRESO',
+      categoriaIngreso: 'PAQUETES',
+      fecha: rangoFechas(desde, hasta),
+      paradas: { some: {} },
+    },
+    select: { fecha: true, turno: true, paradas: { select: { hora: true } } },
+    orderBy: { fecha: 'desc' },
+    take: MAX_FILAS,
+  });
+
+  const aMin = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+  const filas = [];
+  for (const r of rutas) {
+    const horas = r.paradas.map((p) => p.hora).filter(Boolean).sort();
+    if (horas.length < 2) continue;
+    const minutos = aMin(horas[horas.length - 1]) - aMin(horas[0]);
+    filas.push({
+      fecha: iso(r.fecha),
+      turno: r.turno,
+      primeraHora: horas[0],
+      ultimaHora: horas[horas.length - 1],
+      duracionMinutos: minutos,
+      duracion: minutosATexto(minutos),
+      paradasConHora: horas.length,
+      paradasTotales: r.paradas.length,
+    });
+  }
+
+  const promedio = filas.length ? Math.round(filas.reduce((s, f) => s + f.duracionMinutos, 0) / filas.length) : null;
+  return {
+    nota: 'Duración = primera a última hora de llegada registrada. No incluye carga ni regreso. Solo rutas con paradas cargadas.',
+    rutasConDatos: filas.length,
+    promedioMinutos: promedio,
+    promedio: promedio == null ? null : minutosATexto(promedio),
+    filas: filas.slice(0, tope),
+  };
+}
+
+module.exports = { ErrorConsulta, resumenPorPeriodo, totalesPorCategoria, estadisticasPaquetes, buscarParadas, duracionRutas };

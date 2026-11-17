@@ -72,6 +72,7 @@ model Transaccion {
   turno               Turno?
   fecha               DateTime        @default(now())
   detallesRetiro      DetalleRetiro[]
+  paradas             Parada[]
 }
 
 enum TipoTransaccion {
@@ -112,6 +113,27 @@ model DetalleRetiro {
   nombre        String
   zona          String
   precio        Decimal      @db.Decimal(10, 2)
+
+  @@index([transaccionId])
+}
+
+// Paradas de una ruta de reparto (se importan del PDF de Circuit o se agregan a mano).
+// Una parada puede tener varios paquetes (Circuit cuenta una sola parada por dirección).
+// No tiene que cuadrar con los totales de la ruta: es información de consulta, los montos salen de Transaccion.
+// "hora" es la hora real de llegada en formato HH:mm (null si no es confiable).
+// "direccionNormalizada" sirve para buscar sin tildes ni diferencias de "Av./Avenida".
+model Parada {
+  id                   Int         @id @default(autoincrement())
+  transaccionId        Int
+  transaccion          Transaccion @relation(fields: [transaccionId], references: [id], onDelete: Cascade)
+  orden                Int
+  direccion            String
+  direccionNormalizada String
+  hora                 String?
+  notas                String?
+  cantidadPaquetes     Int         @default(1)
+  paquetesFallidos     Int         @default(0)
+  creadoEn             DateTime    @default(now())
 
   @@index([transaccionId])
 }
