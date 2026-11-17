@@ -14,7 +14,7 @@ async function main() {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5', max_tokens: 16, messages: [{ role: 'user', content: 'Di hola' }] }),
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5', max_tokens: 16, messages: [{ role: 'user', content: 'Di hola' }] }),
     });
     console.log('Estado:', r.status, (await r.text()).slice(0, 300));
   } catch (e) {
@@ -24,7 +24,7 @@ async function main() {
   console.log('\n2) Llamada con el SDK...');
   try {
     const client = new Anthropic({ apiKey: key });
-    const r = await client.messages.create({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5', max_tokens: 16, messages: [{ role: 'user', content: 'Di hola' }] });
+    const r = await client.messages.create({ model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5', max_tokens: 16, messages: [{ role: 'user', content: 'Di hola' }] });
     console.log('OK:', JSON.stringify(r.content));
   } catch (e) {
     console.log('ERROR SDK:', e.status, e.message, '| causa:', e.cause);

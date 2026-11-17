@@ -8,7 +8,7 @@ const {
   duracionRutas,
 } = require('./consultaFinancieraService');
 
-const MODELO = process.env.ANTHROPIC_CHAT_MODEL || process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+const MODELO = process.env.ANTHROPIC_CHAT_MODEL || process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
 const MAX_VUELTAS = 5; // máximo de rondas modelo <-> herramientas por pregunta
 
 const FILTROS_FECHA = {

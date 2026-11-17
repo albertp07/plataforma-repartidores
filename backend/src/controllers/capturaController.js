@@ -104,7 +104,7 @@ async function analizarCaptura(req, res) {
     let http = 500;
     if (status === 503) { mensaje = error.message; http = 503; }
     else if (status === 401 || status === 403) mensaje = 'La API key de Anthropic es inválida o fue revocada. Revisa ANTHROPIC_API_KEY en backend/.env y reinicia el backend.';
-    else if (status === 404) mensaje = `El modelo de IA no está disponible para tu cuenta (${process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5'}).`;
+    else if (status === 404) mensaje = `El modelo de IA no está disponible para tu cuenta (${process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5'}).`;
     else if (status === 400 && /credit balance/i.test(error.message || '')) mensaje = 'Tu cuenta de Anthropic no tiene saldo. Agrega créditos en console.anthropic.com.';
     else if (status === 400) mensaje = 'La API rechazó la solicitud. Revisa la terminal del backend para ver el detalle.';
     else if (status === 429) mensaje = 'Límite de uso de la API alcanzado. Intenta en unos minutos.';

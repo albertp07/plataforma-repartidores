@@ -20,5 +20,9 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: ANTHROPIC_CHAT_MODEL
+        value: claude-haiku-5-5
       - key: CORS_ORIGINS
         value: https://repartidores.aryalspa.com

@@ -1,6 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk');
 
-const MODELO = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+const MODELO = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
 
 const HERRAMIENTA = {
   name: 'registrar_detalle_dia',
