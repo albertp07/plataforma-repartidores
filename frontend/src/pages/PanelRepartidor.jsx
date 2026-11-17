@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { obtenerMiPerfil, crearPerfil } from '../services/repartidorService';
+import { obtenerMiPerfil, crearPerfil, actualizarMiMeta } from '../services/repartidorService';
 import { crearSolicitudCambio, obtenerMisSolicitudes } from '../services/solicitudCambioService';
 import {
   obtenerMisTransacciones,
@@ -14,6 +14,7 @@ import SelectorFecha from '../components/SelectorFecha';
 import SelectorTurno from '../components/SelectorTurno';
 import SelectPersonalizado from '../components/SelectPersonalizado';
 import ResumenSemana from '../components/ResumenSemana';
+import MetaSemanal from '../components/MetaSemanal';
 import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
@@ -745,6 +746,17 @@ function PanelRepartidor() {
           </div>
         ) : (
           <>
+            <MetaSemanal
+              transacciones={transaccionesSemana}
+              rango={formatoRangoSemana(semanaOffset)}
+              semanaPasada={semanaOffset > 0}
+              paquetesPorDia={perfil.metaPaquetesDia ?? 40}
+              onGuardarMeta={async (valor) => {
+                const actualizado = await actualizarMiMeta(valor);
+                setPerfil((p) => ({ ...p, metaPaquetesDia: actualizado.metaPaquetesDia }));
+              }}
+            />
+
             <TabSelector
               label="Período"
               value={periodo}

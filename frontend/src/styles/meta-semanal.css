@@ -1,0 +1,187 @@
+/* ==========================================================
+   META SEMANAL
+   ========================================================== */
+.meta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 20px 18px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.meta-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.meta-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.meta-sub {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin: 2px 0 0;
+}
+
+.meta-pct {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  transition: color 0.5s ease;
+}
+
+.meta-track {
+  height: 16px;
+  background: var(--line-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meta-fill {
+  height: 100%;
+  min-width: 6px;
+  border-radius: 999px;
+  transition: width 0.6s ease, background 0.6s ease;
+}
+
+.meta-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink-mute);
+}
+
+.meta-montos strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.meta-faltan {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.meta-ok {
+  color: var(--ok);
+}
+
+@media (max-width: 768px) {
+  .meta {
+    padding: 14px 16px 16px;
+  }
+
+  .meta-pct {
+    font-size: 24px;
+  }
+}
+
+/* Edición de la meta */
+.meta-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.meta-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-ink);
+  cursor: pointer;
+}
+
+.meta-edit:hover {
+  text-decoration: underline;
+}
+
+.meta-form {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.meta-form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.meta-form-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meta-input {
+  width: 110px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.meta-input:focus {
+  outline: none;
+  box-shadow: var(--focus);
+  border-color: var(--brand);
+}
+
+.meta-btn {
+  padding: 9px 16px;
+}
+
+.meta-form-hint {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin: 8px 0 0;
+}
+
+/* Barra fija al hacer scroll (solo la barra, sin textos) */
+.meta-sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: var(--line);
+  z-index: 60;
+  box-shadow: 0 1px 4px rgba(29, 34, 41, 0.15);
+}
+
+.meta-sticky-fill {
+  height: 100%;
+  min-width: 6px;
+  border-radius: 0 999px 999px 0;
+  transition: width 0.6s ease, background 0.6s ease;
+}

@@ -60,7 +60,34 @@ async function obtenerMiPerfilRepartidor(req, res) {
   }
 }
 
+async function actualizarMiMeta(req, res) {
+  try {
+    const usuarioId = req.usuario.id;
+    const meta = Number(req.body.metaPaquetesDia);
+
+    if (!Number.isInteger(meta) || meta < 1 || meta > 500) {
+      return res.status(400).json({ error: 'La meta debe ser un número entero entre 1 y 500 paquetes por día' });
+    }
+
+    const existente = await prisma.repartidor.findUnique({ where: { usuarioId } });
+    if (!existente) {
+      return res.status(404).json({ error: 'Este usuario no tiene perfil de repartidor' });
+    }
+
+    const repartidor = await prisma.repartidor.update({
+      where: { usuarioId },
+      data: { metaPaquetesDia: meta },
+    });
+
+    res.json(repartidor);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar la meta' });
+  }
+}
+
 module.exports = {
+  actualizarMiMeta,
   crearRepartidor,
   listarRepartidores,
   obtenerMiPerfilRepartidor,

@@ -43,6 +43,7 @@ model Repartidor {
   usuario       Usuario       @relation(fields: [usuarioId], references: [id])
   telefono      String?
   vehiculo      String?
+  metaPaquetesDia Int         @default(40)
   transacciones Transaccion[]
   puntosRetiro  PuntoRetiro[]
   creadoEn      DateTime      @default(now())
