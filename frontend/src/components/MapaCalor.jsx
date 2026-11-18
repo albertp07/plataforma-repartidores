@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import TabSelector from './TabSelector';
+import RankingParadas from './RankingParadas';
 import { crearCapaCalor } from '../utils/capaCalor';
 import { obtenerMapaCalor } from '../services/mapaService';
 import '../styles/mapa.css';
@@ -181,6 +182,14 @@ function MapaCalor() {
     }
   }, [datos, metrica]);
 
+  // Centra el mapa en una dirección del ranking
+  function verEnMapa(fila) {
+    const mapa = mapaRef.current;
+    if (!mapa || !Number.isFinite(fila.lat) || !Number.isFinite(fila.lng)) return;
+    lienzoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    mapa.flyTo([fila.lat, fila.lng], 18, { duration: 0.8 });
+  }
+
   const resumen = datos?.resumen;
   const sinDatos = !cargando && !error && resumen && resumen.paradas === 0;
 
@@ -219,6 +228,8 @@ function MapaCalor() {
           </div>
         )}
       </div>
+
+      <RankingParadas onVerEnMapa={verEnMapa} />
 
       {resumen && resumen.paradas > 0 && (
         <div className="panel mapa-resumen">

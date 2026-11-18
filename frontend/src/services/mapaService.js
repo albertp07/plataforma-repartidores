@@ -10,3 +10,13 @@ export async function obtenerMapaCalor(params) {
   const response = await api.get('/mapa/calor', { params });
   return response.data;
 }
+
+// Ranking de direcciones más visitadas. params: { desde, hasta, turno, limite } (fechas YYYY-MM-DD)
+// Devuelve:
+//   ranking: [{ posicion, direccion, visitas, paquetes, fallidos, ultimaVisita, lat, lng }]
+//            (lat/lng son null si la dirección aún no está ubicada en el mapa)
+//   resumen: { paradas, direcciones }
+export async function obtenerRankingParadas(params) {
+  const response = await api.get('/mapa/ranking', { params });
+  return response.data;
+}

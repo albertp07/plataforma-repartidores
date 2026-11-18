@@ -81,4 +81,71 @@ async function obtenerMapaCalor(ctx, { desde, hasta, turno } = {}) {
   };
 }
 
-module.exports = { obtenerMapaCalor };
+const LIMITE_RANKING_DEFECTO = 10;
+const LIMITE_RANKING_MAX = 50;
+
+// Ranking de las direcciones más visitadas (una visita = una parada registrada en una ruta).
+// Mismo alcance que el mapa: ADMIN ve todas las rutas, un repartidor solo las suyas.
+// Incluye lat/lng cuando la dirección ya está geocodificada, para poder centrar el mapa en ella.
+async function obtenerRankingParadas(ctx, { desde, hasta, turno, limite } = {}) {
+  const turnoFiltro = turno && turno !== 'TODOS' ? turno : undefined;
+  if (turnoFiltro && turnoFiltro !== 'AM' && turnoFiltro !== 'PM') {
+    throw new ErrorConsulta('El turno debe ser TODOS, AM o PM');
+  }
+  const limiteNum = Number.parseInt(limite, 10);
+  const top = Number.isFinite(limiteNum)
+    ? Math.min(Math.max(limiteNum, 1), LIMITE_RANKING_MAX)
+    : LIMITE_RANKING_DEFECTO;
+
+  const paradas = await prisma.parada.findMany({
+    where: {
+      transaccion: {
+        ...(ctx.repartidorId ? { repartidorId: ctx.repartidorId } : {}),
+        fecha: rangoFechas(desde, hasta),
+        ...(turnoFiltro ? { turno: turnoFiltro } : {}),
+      },
+    },
+    select: {
+      direccion: true,
+      direccionNormalizada: true,
+      cantidadPaquetes: true,
+      paquetesFallidos: true,
+      transaccion: { select: { fecha: true } },
+    },
+  });
+
+  const porDireccion = new Map();
+  for (const p of paradas) {
+    let g = porDireccion.get(p.direccionNormalizada);
+    if (!g) {
+      g = { direccion: p.direccion, direccionNormalizada: p.direccionNormalizada, visitas: 0, paquetes: 0, fallidos: 0, ultimaVisita: null };
+      porDireccion.set(p.direccionNormalizada, g);
+    }
+    g.visitas += 1;
+    g.paquetes += p.cantidadPaquetes;
+    g.fallidos += p.paquetesFallidos;
+    if (!g.ultimaVisita || p.transaccion.fecha > g.ultimaVisita) g.ultimaVisita = p.transaccion.fecha;
+  }
+
+  const ordenado = [...porDireccion.values()].sort(
+    (a, b) => b.visitas - a.visitas || b.paquetes - a.paquetes || a.direccion.localeCompare(b.direccion, 'es')
+  );
+  const ranking = ordenado.slice(0, top);
+
+  const claves = ranking.map((r) => r.direccionNormalizada);
+  const cache = claves.length
+    ? await prisma.direccionGeocodificada.findMany({ where: { direccionNormalizada: { in: claves } } })
+    : [];
+  const cachePorClave = new Map(cache.map((c) => [c.direccionNormalizada, c]));
+
+  return {
+    ranking: ranking.map(({ direccionNormalizada, ...r }, i) => {
+      const c = cachePorClave.get(direccionNormalizada);
+      const ubicada = !!(c?.encontrada && c.lat != null && c.lng != null);
+      return { posicion: i + 1, ...r, lat: ubicada ? c.lat : null, lng: ubicada ? c.lng : null };
+    }),
+    resumen: { paradas: paradas.length, direcciones: porDireccion.size },
+  };
+}
+
+module.exports = { obtenerMapaCalor, obtenerRankingParadas };
