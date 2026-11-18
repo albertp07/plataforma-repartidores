@@ -56,11 +56,20 @@ function limpiarDireccion(bruta) {
   return [principal, ...extras].join(', ').replace(/\s+/g, ' ').trim();
 }
 
-// Cantidad de paquetes sugerida desde las notas: números sueltos fuera de paréntesis
-// "23 BB M □ y 27 □Verde P (G) (Quillin 139 y 123)" -> 2
+// Emojis / símbolos / caracteres ilegibles (U+FFFD) que el PDF no logra decodificar: se ignoran por completo.
+// Se reemplazan por un espacio para que no se peguen ni oculten el número que los acompaña ("8🍃P" -> "8 P").
+const RE_EMOJI_O_SIMBOLO = /[\uFFFD\u200D\uFE0F\u2190-\u2BFF\u{1F000}-\u{1FFFF}\uD800-\uDFFF]+/gu;
+
+function limpiarNotas(notas) {
+  return String(notas || '').replace(RE_EMOJI_O_SIMBOLO, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Cantidad de paquetes sugerida desde las notas: números sueltos fuera de paréntesis.
+// Los emojis no influyen: "8 🍃P + 9 B○P + 37 ●Almohada P + 39■P (B,A,DyC)" -> 4
 function sugerirCantidadPaquetes(notas) {
-  const sinParentesis = String(notas || '').replace(/\([^)]*\)/g, ' ');
-  const numeros = new Set(sinParentesis.match(/(?<![\w.])\d{1,3}(?![\w])/g) || []);
+  const sinParentesis = limpiarNotas(notas).replace(/\([^)]*\)/g, ' ');
+  // Número de 1-3 dígitos que no es parte de otra palabra/número (los símbolos ya fueron eliminados)
+  const numeros = new Set(sinParentesis.match(/(?<![A-Za-z0-9.])\d{1,3}(?![A-Za-z0-9])/g) || []);
   return Math.min(Math.max(numeros.size, 1), 20);
 }
 
@@ -218,7 +227,6 @@ async function leerParadasDePdf(buffer) {
 
   const advertencias = [];
   let dudosas = 0;
-  let conEmoji = 0;
 
   const paradas = filas
     .sort((a, b) => a.numero - b.numero)
@@ -228,8 +236,7 @@ async function leerParadasDePdf(buffer) {
       // Hora real fuera de rango (parada marcada al día siguiente o fuera de orden): no es confiable
       const dudosa = hora != null && atrasoMin != null && Math.abs(atrasoMin) > UMBRAL_ATRASO_DUDOSO_MIN;
       if (dudosa) dudosas += 1;
-      const notas = f.notas.replace(/\uFFFD+/g, '[emoji]');
-      if (notas !== f.notas) conEmoji += 1;
+      const notas = limpiarNotas(f.notas);
       return {
         orden: i + 1,
         direccion: limpiarDireccion(f.direccion),
@@ -245,10 +252,6 @@ async function leerParadasDePdf(buffer) {
 
   if (dudosas > 0) {
     advertencias.push(`${dudosas} parada(s) tienen una hora real poco confiable (marcadas otro día o fuera de orden). Complétalas o déjalas sin hora.`);
-  }
-
-  if (conEmoji > 0) {
-    advertencias.push(`${conEmoji} nota(s) tenían emojis que el PDF no permite leer: quedaron como [emoji]. Puedes corregirlas.`);
   }
 
   return { fechaPdf: fechaDelTitulo(titulo), paradas, advertencias };
