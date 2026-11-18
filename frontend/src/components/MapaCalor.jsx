@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import TabSelector from './TabSelector';
+import { crearCapaCalor } from '../utils/capaCalor';
 import { obtenerMapaCalor } from '../services/mapaService';
 import '../styles/mapa.css';
 
@@ -77,18 +78,17 @@ function MapaCalor() {
   const capaRef = useRef(null);
   const debeAjustarRef = useRef(true);
 
-  const [plugin, setPlugin] = useState(false);
   const [periodo, setPeriodo] = useState('MES');
   const [turno, setTurno] = useState('TODOS');
   const [metrica, setMetrica] = useState('ENTREGAS');
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [errorDibujo, setErrorDibujo] = useState('');
   const [verSinUbicar, setVerSinUbicar] = useState(false);
 
   // 1) Crea el mapa una sola vez
   useEffect(() => {
-    let cancelado = false;
     const mapa = L.map(lienzoRef.current, { center: CENTRO_MACUL, zoom: ZOOM_INICIAL, zoomControl: true });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -97,14 +97,7 @@ function MapaCalor() {
     capaRef.current = L.layerGroup().addTo(mapa);
     mapaRef.current = mapa;
 
-    // leaflet.heat es un script antiguo que se engancha al global "L": se carga después de exponerlo
-    window.L = L;
-    import('leaflet.heat').then(() => {
-      if (!cancelado) setPlugin(true);
-    });
-
     return () => {
-      cancelado = true;
       mapa.remove();
       mapaRef.current = null;
       capaRef.current = null;
@@ -125,6 +118,7 @@ function MapaCalor() {
         if (cancelado) return;
         setDatos(respuesta);
         setError('');
+        setErrorDibujo('');
         if (respuesta.resumen.pendientes > 0 && reintentos < MAX_REINTENTOS) {
           reintentos += 1;
           temporizador = setTimeout(() => cargar(false), ESPERA_REINTENTO_MS);
@@ -148,19 +142,16 @@ function MapaCalor() {
   useEffect(() => {
     const mapa = mapaRef.current;
     const capa = capaRef.current;
-    if (!mapa || !capa || !plugin || !datos) return;
+    if (!mapa || !capa || !datos) return;
 
     capa.clearLayers();
-    const puntos = datos.puntos.filter((p) => pesoDe(p, metrica) > 0);
+    // Se descartan coordenadas inválidas para que un dato malo no impida dibujar el resto
+    const puntos = datos.puntos.filter(
+      (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && pesoDe(p, metrica) > 0
+    );
     if (puntos.length === 0) return;
 
-    const maximo = Math.max(...puntos.map((p) => pesoDe(p, metrica)));
-    L.heatLayer(
-      puntos.map((p) => [p.lat, p.lng, pesoDe(p, metrica)]),
-      { radius: 28, blur: 22, maxZoom: 17, max: maximo, minOpacity: 0.3, gradient: GRADIENTES[metrica] }
-    ).addTo(capa);
-
-    // Puntos pequeños con detalle al pasar el cursor o tocar
+    // Puntos pequeños con detalle al pasar el cursor o tocar (se dibujan aunque falle el calor)
     puntos.forEach((p) => {
       L.circleMarker([p.lat, p.lng], {
         radius: 5,
@@ -173,11 +164,22 @@ function MapaCalor() {
         .addTo(capa);
     });
 
+    try {
+      const maximo = Math.max(...puntos.map((p) => pesoDe(p, metrica)));
+      crearCapaCalor(
+        puntos.map((p) => [p.lat, p.lng, pesoDe(p, metrica)]),
+        { max: maximo, gradiente: GRADIENTES[metrica] }
+      ).addTo(capa);
+    } catch (err) {
+      console.error('No se pudo dibujar el mapa de calor:', err);
+      queueMicrotask(() => setErrorDibujo('No se pudo dibujar el calor del mapa, pero los puntos sí se muestran.'));
+    }
+
     if (debeAjustarRef.current) {
       debeAjustarRef.current = false;
       mapa.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 16 });
     }
-  }, [datos, metrica, plugin]);
+  }, [datos, metrica]);
 
   const resumen = datos?.resumen;
   const sinDatos = !cargando && !error && resumen && resumen.paradas === 0;
@@ -199,9 +201,9 @@ function MapaCalor() {
         </div>
       </div>
 
-      {error && (
+      {(error || errorDibujo) && (
         <p className="login-error" role="alert">
-          {error}
+          {error || errorDibujo}
         </p>
       )}
 
