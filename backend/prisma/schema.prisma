@@ -139,6 +139,21 @@ model Parada {
 }
 
 
+// Caché de coordenadas por dirección (geocodificación con Nominatim/OpenStreetMap).
+// Se guarda aparte de Parada para que sobreviva cuando se reemplazan las paradas de una ruta
+// y para geocodificar una sola vez cada dirección, aunque se repita en muchos días.
+// "aproximada" = no se encontró el número exacto y se usó el centro de la calle.
+// "encontrada = false" = no se pudo ubicar; se reintenta pasados unos días.
+model DireccionGeocodificada {
+  id                   Int      @id @default(autoincrement())
+  direccionNormalizada String   @unique
+  lat                  Float?
+  lng                  Float?
+  encontrada           Boolean  @default(false)
+  aproximada           Boolean  @default(false)
+  consultadoEn         DateTime @default(now())
+}
+
 // Solicitudes de cambio de datos de perfil. El repartidor NO edita sus datos
 // directamente: pide el cambio y un administrador lo aprueba (se aplica) o rechaza.
 // "cambios" guarda solo los campos propuestos (nombre, telefono, vehiculo).

@@ -1,6 +1,7 @@
 const prisma = require('../config/prisma');
 const { leerParadasDePdf, normalizarDireccion, ErrorPdf } = require('../services/paradasPdfService');
 const { buscarParadas, ErrorConsulta } = require('../services/consultaFinancieraService');
+const { iniciarGeocodificacion } = require('../services/geocodificacionService');
 
 const MAX_PARADAS = 120;
 const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -153,6 +154,9 @@ async function reemplazarParadas(req, res) {
       prisma.parada.deleteMany({ where: { transaccionId: transaccion.id } }),
       prisma.parada.createMany({ data: datos }),
     ]);
+
+    // Ubica en el mapa las direcciones nuevas (segundo plano, no bloquea la respuesta)
+    iniciarGeocodificacion();
 
     const paradas = await prisma.parada.findMany({
       where: { transaccionId: transaccion.id },

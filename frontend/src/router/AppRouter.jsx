@@ -4,6 +4,7 @@ import Privacidad from '../pages/Privacidad';
 import Terminos from '../pages/Terminos';
 import DashboardAdmin from '../pages/DashboardAdmin';
 import PanelRepartidor from '../pages/PanelRepartidor';
+import Mapa from '../pages/Mapa';
 import RutaProtegida from '../components/RutaProtegida';
 import NotFound from '../pages/NotFound';
 
@@ -27,6 +28,14 @@ function AppRouter() {
           element={
             <RutaProtegida rolRequerido="REPARTIDOR">
               <PanelRepartidor />
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="/mapa"
+          element={
+            <RutaProtegida rolRequerido="REPARTIDOR">
+              <Mapa />
             </RutaProtegida>
           }
         />

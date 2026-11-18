@@ -304,4 +304,4 @@ async function duracionRutas(ctx, { desde, hasta, limite } = {}) {
   };
 }
 
-module.exports = { ErrorConsulta, resumenPorPeriodo, totalesPorCategoria, estadisticasPaquetes, buscarParadas, duracionRutas };
+module.exports = { ErrorConsulta, rangoFechas, resumenPorPeriodo, totalesPorCategoria, estadisticasPaquetes, buscarParadas, duracionRutas };

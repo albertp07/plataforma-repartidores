@@ -1,0 +1,120 @@
+/* Sección Mapa: mapa de calor de entregas */
+
+.mapa {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mapa-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin-bottom: 0;
+}
+
+.mapa-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mapa-marco {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.mapa-lienzo {
+  height: min(64vh, 580px);
+  min-height: 360px;
+  width: 100%;
+  /* Leaflet usa z-index altos internos: se aíslan para no quedar sobre menús ni modales */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  font-family: var(--font-body);
+}
+
+.mapa-velo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: rgba(241, 243, 246, 0.82);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.mapa-velo p {
+  margin: 0;
+  max-width: 340px;
+}
+
+.mapa-resumen {
+  margin-bottom: 0;
+}
+
+.mapa-resumen p {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.mapa-resumen p:last-child {
+  margin-bottom: 0;
+}
+
+.mapa-fallidos {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.mapa-aviso {
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+.mapa-sin-ubicar {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.mapa-sin-ubicar span {
+  color: var(--ink-mute);
+}
+
+.mapa-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.mapa-tooltip em {
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .mapa-lienzo {
+    height: 58vh;
+    min-height: 320px;
+  }
+
+  .mapa-filtro {
+    width: 100%;
+  }
+}
