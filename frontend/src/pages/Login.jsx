@@ -41,7 +41,7 @@ function Login() {
     try {
       const data = await login(email, password);
       iniciarSesion(data.usuario, data.token);
-      navigate(data.usuario.rol === 'ADMIN' ? '/dashboard' : '/panel');
+      navigate('/panel');
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas. Intenta de nuevo.');
     } finally {
@@ -56,7 +56,7 @@ function Login() {
     try {
       const data = await loginConGoogle(credentialResponse.credential);
       iniciarSesion(data.usuario, data.token);
-      navigate(data.usuario.rol === 'ADMIN' ? '/dashboard' : '/panel');
+      navigate('/panel');
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo iniciar sesión con Google. Intenta de nuevo.');
     } finally {

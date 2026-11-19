@@ -11,7 +11,7 @@ export function formatoPeso(valor) {
 }
 
 // Registros antiguos pueden no traer montoLiquido/montoIva: se derivan desde el bruto.
-function desglose(t) {
+export function desglose(t) {
   const bruto = Number(t.monto) || 0;
   const neto = t.montoLiquido != null ? Number(t.montoLiquido) : bruto / (1 + IVA);
   const iva = t.montoIva != null ? Number(t.montoIva) : bruto - neto;

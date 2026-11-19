@@ -1,13 +1,11 @@
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import MapaCalor from '../components/MapaCalor';
 import EstadoServidor from '../components/EstadoServidor';
 import '../styles/shared.css';
 
 function Mapa() {
-  const { usuario } = useAuth();
   const navigate = useNavigate();
-  const rutaVolver = usuario?.rol === 'ADMIN' ? '/dashboard' : '/panel';
+  const rutaVolver = '/panel';
 
   return (
     <div className="app-shell">

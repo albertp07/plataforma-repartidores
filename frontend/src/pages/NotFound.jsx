@@ -11,7 +11,7 @@ function NotFound() {
   }, []);
 
   // Si hay sesión activa, el "home" es su panel según el rol; si no, el login.
-  const rutaHome = usuario ? (usuario.rol === 'ADMIN' ? '/dashboard' : '/panel') : '/';
+  const rutaHome = usuario ? '/panel' : '/';
   const textoHome = usuario ? 'Ir a mi panel' : 'Ir al inicio de sesión';
 
   return (

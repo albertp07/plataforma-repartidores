@@ -27,6 +27,10 @@ function textoDescripcion(m) {
     const base = m.descripcion || 'Sin actividad';
     return m.observaciones ? `${base}: ${m.observaciones}` : base;
   }
+  if (m.tipo === 'GASTO') {
+    const base = m.descripcion || '-';
+    return m.observaciones ? `${base}: ${m.observaciones}` : base;
+  }
   if (m.categoriaIngreso !== 'PAQUETES' || m.cantidadPaquetes == null) return m.descripcion || '-';
   const partes = [`${m.cantidadPaquetes} entregadas`];
   if (m.paquetesSobredimensionados) partes.push(`${m.paquetesSobredimensionados} S/D`);

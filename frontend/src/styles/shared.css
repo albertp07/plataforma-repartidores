@@ -1696,3 +1696,71 @@
     font-size: 13.5px;
   }
 }
+
+/* Tarjetas de resumen con detalle al pasar el mouse (neto / IVA / bruto) */
+.stat-card.has-tip {
+  cursor: help;
+  outline: none;
+}
+
+.stat-card.has-tip:focus-visible {
+  box-shadow: 0 0 0 3px rgba(247, 168, 0, 0.45);
+}
+
+.stat-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  min-width: 240px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  border: 1px solid #E2E6EB;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(29, 34, 41, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  pointer-events: none;
+}
+
+.stat-card.has-tip:hover .stat-tip,
+.stat-card.has-tip:focus .stat-tip,
+.stat-card.has-tip:focus-within .stat-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.stat-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #66717E;
+}
+
+.stat-tip-row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: #1D2229;
+  font-weight: 600;
+}
+
+.stat-tip-row.strong {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #E2E6EB;
+  color: #1D2229;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .stat-tip {
+    min-width: 0;
+    width: max-content;
+    max-width: calc(100vw - 48px);
+  }
+}

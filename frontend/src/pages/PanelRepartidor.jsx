@@ -258,6 +258,7 @@ function PanelRepartidor() {
   const [descuentoCombustible, setDescuentoCombustible] = useState('');
   const [detalleMantencion, setDetalleMantencion] = useState(DETALLES_MANTENCION[0]);
   const [descripcionOtros, setDescripcionOtros] = useState('');
+  const [observacionesGasto, setObservacionesGasto] = useState('');
 
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -592,6 +593,7 @@ function PanelRepartidor() {
     setDescuentoCombustible('');
     setDetalleMantencion(DETALLES_MANTENCION[0]);
     setDescripcionOtros('');
+    setObservacionesGasto('');
     setFechaGasto(isoADDMMYYYY(hoyISO()));
   }
 
@@ -638,6 +640,7 @@ function PanelRepartidor() {
         categoriaGasto,
         montoSinDescuento: esBencina ? totalSinDescuento : undefined,
         descuentoAplicado: esBencina && descuento > 0 ? descuento : undefined,
+        observaciones: observacionesGasto.trim() || undefined,
         fecha: `${fechaISO}T12:00:00.000Z`,
       });
       resetearFormularioGasto();
@@ -1178,6 +1181,17 @@ function PanelRepartidor() {
                         </div>
                       )}
 
+                      <div className="field">
+                        <span className="field-label">Comentario (opcional)</span>
+                        <textarea
+                          rows="3"
+                          maxLength={500}
+                          value={observacionesGasto}
+                          onChange={(e) => setObservacionesGasto(e.target.value)}
+                          placeholder={categoriaGasto === 'MANTENCION' ? 'Ej: Cambio de pastillas de freno delanteras' : 'Ej: Detalle o nota del gasto'}
+                        />
+                      </div>
+
                       <button type="submit" className="btn-primary" disabled={guardando}>
                         {guardando ? 'Guardando...' : 'Guardar gasto'}
                       </button>
@@ -1237,7 +1251,7 @@ function PanelRepartidor() {
                 </thead>
                 <tbody>
                   {transaccionesSemana.map((t, idx) => {
-                    const tieneDesglose = t.tipo === 'INGRESO' && t.montoLiquido != null;
+                    const tieneDesglose = (t.tipo === 'INGRESO' && t.montoLiquido != null) || (t.tipo === 'GASTO' && !!t.observaciones);
                     const expandida = filaExpandida === t.id;
                     const claseFila = [idx % 2 === 1 ? 'row-odd' : '', tieneDesglose ? 'row-clickable' : ''].filter(Boolean).join(' ');
                     return (
@@ -1287,6 +1301,7 @@ function PanelRepartidor() {
                         {tieneDesglose && expandida && (
                           <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={6}>
+                              {t.tipo === 'INGRESO' && (
                               <div className="detail-badges">
                                   {t.sinActividad ? (
                                     <span className="badge badge-sky">Sin actividad ese día</span>
@@ -1343,6 +1358,7 @@ function PanelRepartidor() {
                                     </>
                                   )}
                                 </div>
+                              )}
                               {t.observaciones && (
                                 <p className="detail-note">{t.observaciones}</p>
                               )}

@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import '../styles/shared.css';
 import { formatearFecha, formatearFechaLocal, formatearDiaMes } from '../utils/fechas';
+import { desglose } from '../utils/resumenSemanal';
 
 const chartTooltipStyle = {
   background: '#FFFFFF',
@@ -51,6 +52,20 @@ const TABS = [
 
 function formatoPeso(valor) {
   return Math.round(valor).toLocaleString('es-CL');
+}
+
+// Tooltip con el detalle de una tarjeta de resumen (aparece al pasar el mouse o enfocar/tocar la tarjeta)
+function DetalleMontos({ filas }) {
+  return (
+    <div className="stat-tip" role="tooltip">
+      {filas.map((f) => (
+        <div key={f.label} className={`stat-tip-row ${f.destacado ? 'strong' : ''}`}>
+          <span>{f.label}</span>
+          <span>${formatoPeso(f.valor)}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function ordenTipoMovimiento(m) {
@@ -330,6 +345,16 @@ function DashboardAdmin() {
   const totalIngresos = movimientosFiltrados
     .filter((m) => m.tipo === 'INGRESO')
     .reduce((sum, m) => sum + Number(m.monto), 0);
+  // Ingresos desglosados: el IVA cobrado hay que pagarlo, por eso el monto "real" es el neto
+  const ingresosDesglose = movimientosFiltrados
+    .filter((m) => m.tipo === 'INGRESO' && !m.sinActividad)
+    .reduce(
+      (acc, m) => {
+        const d = desglose(m);
+        return { neto: acc.neto + d.neto, iva: acc.iva + d.iva, bruto: acc.bruto + d.bruto };
+      },
+      { neto: 0, iva: 0, bruto: 0 },
+    );
   const totalGastos = movimientosFiltrados
     .filter((m) => m.tipo === 'GASTO')
     .reduce((sum, m) => sum + Number(m.monto), 0);
@@ -611,17 +636,31 @@ function DashboardAdmin() {
             )}
 
             <div className="stat-grid">
-              <div className="stat-card green">
-                <p className="stat-label">Ingresos totales</p>
-                <p className="stat-value">${formatoPeso(totalIngresos)}</p>
+              <div className="stat-card green has-tip" tabIndex={0}>
+                <p className="stat-label">Ingresos netos</p>
+                <p className="stat-value">${formatoPeso(ingresosDesglose.neto)}</p>
+                <DetalleMontos
+                  filas={[
+                    { label: 'Neto', valor: ingresosDesglose.neto },
+                    { label: 'IVA (19%)', valor: ingresosDesglose.iva },
+                    { label: 'Bruto', valor: ingresosDesglose.bruto, destacado: true },
+                  ]}
+                />
               </div>
               <div className="stat-card red">
                 <p className="stat-label">Gastos totales</p>
                 <p className="stat-value">${formatoPeso(totalGastos)}</p>
               </div>
-              <div className="stat-card amber">
-                <p className="stat-label">Balance</p>
-                <p className="stat-value">${formatoPeso(totalIngresos - totalGastos)}</p>
+              <div className="stat-card amber has-tip" tabIndex={0}>
+                <p className="stat-label">Balance neto</p>
+                <p className="stat-value">${formatoPeso(ingresosDesglose.neto - totalGastos)}</p>
+                <DetalleMontos
+                  filas={[
+                    { label: 'Neto (ingresos − gastos)', valor: ingresosDesglose.neto - totalGastos },
+                    { label: 'IVA a pagar', valor: ingresosDesglose.iva },
+                    { label: 'Bruto', valor: ingresosDesglose.bruto - totalGastos, destacado: true },
+                  ]}
+                />
               </div>
               <div className="stat-card neutral">
                 <p className="stat-label">Repartidores activos</p>
@@ -835,7 +874,7 @@ function DashboardAdmin() {
                 </thead>
                 <tbody>
                   {ordenarMovimientos(movimientosVista).map((m, idx) => {
-                    const tieneDesglose = m.tipo === 'INGRESO' && m.montoLiquido != null;
+                    const tieneDesglose = (m.tipo === 'INGRESO' && m.montoLiquido != null) || (m.tipo === 'GASTO' && !!m.observaciones);
                     const expandida = filaExpandida === m.id;
                     const claseFila = [idx % 2 === 1 ? 'row-odd' : '', tieneDesglose ? 'row-clickable' : ''].filter(Boolean).join(' ');
                     return (
@@ -886,6 +925,7 @@ function DashboardAdmin() {
                         {tieneDesglose && expandida && (
                           <tr className={`row-detail ${idx % 2 === 1 ? 'row-odd' : ''}`}>
                             <td colSpan={7}>
+                              {m.tipo === 'INGRESO' && (
                               <div className="detail-badges">
                                   {m.sinActividad ? (
                                     <span className="badge badge-sky">Sin actividad ese día</span>
@@ -913,6 +953,7 @@ function DashboardAdmin() {
                                     </>
                                   )}
                                 </div>
+                              )}
                               {m.observaciones && (
                                 <p className="detail-note">{m.observaciones}</p>
                               )}
