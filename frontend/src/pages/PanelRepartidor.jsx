@@ -28,6 +28,8 @@ import CantidadStepper from '../components/CantidadStepper';
 import BarraResumen from '../components/BarraResumen';
 import EstadoServidor from '../components/EstadoServidor';
 import { formatearFecha, formatearDiaMes } from '../utils/fechas';
+import { desglose } from '../utils/resumenSemanal';
+import DetalleMontos from '../components/DetalleMontos';
 
 const IVA = 0.19;
 const VALOR_PAQUETE_DEFAULT = 1500;
@@ -191,13 +193,20 @@ function inicioMesActual() {
 }
 
 function calcularResumen(lista) {
-  const totalIngresos = lista
-    .filter((t) => t.tipo === 'INGRESO')
-    .reduce((sum, t) => sum + Number(t.monto), 0);
+  // El IVA cobrado hay que pagarlo: el monto "real" del repartidor es el neto
+  const ingresos = lista
+    .filter((t) => t.tipo === 'INGRESO' && !t.sinActividad)
+    .reduce(
+      (acc, t) => {
+        const d = desglose(t);
+        return { neto: acc.neto + d.neto, iva: acc.iva + d.iva, bruto: acc.bruto + d.bruto };
+      },
+      { neto: 0, iva: 0, bruto: 0 },
+    );
   const totalGastos = lista
     .filter((t) => t.tipo === 'GASTO')
     .reduce((sum, t) => sum + Number(t.monto), 0);
-  return { totalIngresos, totalGastos, balance: totalIngresos - totalGastos };
+  return { ingresos, totalGastos, balanceNeto: ingresos.neto - totalGastos };
 }
 
 function PanelRepartidor() {
@@ -788,17 +797,31 @@ function PanelRepartidor() {
             />
 
             <div className="stat-grid">
-              <div className="stat-card green">
-                <p className="stat-label">Ingresos</p>
-                <p className="stat-value">${formatoPeso(resumenMostrado.totalIngresos)}</p>
+              <div className="stat-card green has-tip" tabIndex={0}>
+                <p className="stat-label">Ingresos netos</p>
+                <p className="stat-value">${formatoPeso(resumenMostrado.ingresos.neto)}</p>
+                <DetalleMontos
+                  filas={[
+                    { label: 'Neto', valor: resumenMostrado.ingresos.neto },
+                    { label: 'IVA (19%)', valor: resumenMostrado.ingresos.iva },
+                    { label: 'Bruto', valor: resumenMostrado.ingresos.bruto, destacado: true },
+                  ]}
+                />
               </div>
               <div className="stat-card red">
                 <p className="stat-label">Gastos</p>
                 <p className="stat-value">${formatoPeso(resumenMostrado.totalGastos)}</p>
               </div>
-              <div className="stat-card amber">
-                <p className="stat-label">Balance</p>
-                <p className="stat-value">${formatoPeso(resumenMostrado.balance)}</p>
+              <div className="stat-card amber has-tip" tabIndex={0}>
+                <p className="stat-label">Balance neto</p>
+                <p className="stat-value">${formatoPeso(resumenMostrado.balanceNeto)}</p>
+                <DetalleMontos
+                  filas={[
+                    { label: 'Neto (ingresos − gastos)', valor: resumenMostrado.balanceNeto },
+                    { label: 'IVA a pagar', valor: resumenMostrado.ingresos.iva },
+                    { label: 'Bruto', valor: resumenMostrado.ingresos.bruto - resumenMostrado.totalGastos, destacado: true },
+                  ]}
+                />
               </div>
             </div>
 

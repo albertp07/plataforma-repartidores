@@ -21,6 +21,7 @@ import {
 import '../styles/shared.css';
 import { formatearFecha, formatearFechaLocal, formatearDiaMes } from '../utils/fechas';
 import { desglose } from '../utils/resumenSemanal';
+import DetalleMontos from '../components/DetalleMontos';
 
 const chartTooltipStyle = {
   background: '#FFFFFF',
@@ -52,20 +53,6 @@ const TABS = [
 
 function formatoPeso(valor) {
   return Math.round(valor).toLocaleString('es-CL');
-}
-
-// Tooltip con el detalle de una tarjeta de resumen (aparece al pasar el mouse o enfocar/tocar la tarjeta)
-function DetalleMontos({ filas }) {
-  return (
-    <div className="stat-tip" role="tooltip">
-      {filas.map((f) => (
-        <div key={f.label} className={`stat-tip-row ${f.destacado ? 'strong' : ''}`}>
-          <span>{f.label}</span>
-          <span>${formatoPeso(f.valor)}</span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ordenTipoMovimiento(m) {
