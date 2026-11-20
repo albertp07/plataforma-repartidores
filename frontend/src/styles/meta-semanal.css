@@ -185,3 +185,43 @@
   border-radius: 0 999px 999px 0;
   transition: width 0.6s ease, background 0.6s ease;
 }
+
+/* Navegación entre semanas */
+.meta-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.meta-nav .meta-sub {
+  margin: 0;
+}
+
+.meta-nav .meta-edit {
+  margin-left: 4px;
+}
+
+.meta-nav .week-nav-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meta-nav .week-nav-btn:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.meta-nav .week-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

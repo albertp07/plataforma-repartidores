@@ -234,7 +234,7 @@ function PanelRepartidor() {
     actualizar: actualizarPunto,
     quitar: quitarPunto,
   } = usePuntosRetiro(!!perfil);
-  const [periodo, setPeriodo] = useState('TODO');
+  const [periodo, setPeriodo] = useState('MES');
   const [semanaOffset, setSemanaOffset] = useState(0);
 
   const [tipo, setTipo] = useState('INGRESO');
@@ -782,6 +782,9 @@ function PanelRepartidor() {
               transacciones={transaccionesSemana}
               rango={formatoRangoSemana(semanaOffset)}
               semanaPasada={semanaOffset > 0}
+              onSemanaAnterior={() => setSemanaOffset((o) => o + 1)}
+              onSemanaSiguiente={() => setSemanaOffset((o) => Math.max(o - 1, 0))}
+              onVolverActual={() => setSemanaOffset(0)}
               paquetesPorDia={perfil.metaPaquetesDia ?? 40}
               onGuardarMeta={async (valor) => {
                 const actualizado = await actualizarMiMeta(valor);

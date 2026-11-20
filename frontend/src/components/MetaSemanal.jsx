@@ -16,7 +16,16 @@ function colorAvance(porcentaje) {
 }
 
 // Recibe las transacciones de la semana que se está viendo (lunes a domingo).
-function MetaSemanal({ transacciones, rango, semanaPasada = false, paquetesPorDia = PAQUETES_DIA_DEFAULT, onGuardarMeta }) {
+function MetaSemanal({
+  transacciones,
+  rango,
+  semanaPasada = false,
+  paquetesPorDia = PAQUETES_DIA_DEFAULT,
+  onGuardarMeta,
+  onSemanaAnterior,
+  onSemanaSiguiente,
+  onVolverActual,
+}) {
   const [editando, setEditando] = useState(false);
   const [borrador, setBorrador] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -101,12 +110,37 @@ function MetaSemanal({ transacciones, rango, semanaPasada = false, paquetesPorDi
     <section className="meta" aria-label="Meta de la semana" ref={seccionRef}>
       <div className="meta-head">
         <div>
-          <p className="meta-title">Meta de la semana</p>
-          {rango && <p className="meta-sub">{rango}</p>}
+          <p className="meta-title">{semanaPasada ? 'Meta de la semana (historial)' : 'Meta de la semana'}</p>
+          {onSemanaAnterior ? (
+            <div className="meta-nav">
+              <button type="button" className="week-nav-btn" onClick={onSemanaAnterior} aria-label="Semana anterior">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <span className="meta-sub meta-nav-rango">{rango}</span>
+              <button
+                type="button"
+                className="week-nav-btn"
+                onClick={onSemanaSiguiente}
+                disabled={!semanaPasada}
+                aria-label="Semana siguiente"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+              {semanaPasada && onVolverActual && (
+                <button type="button" className="meta-edit" onClick={onVolverActual}>Ir a esta semana</button>
+              )}
+            </div>
+          ) : (
+            rango && <p className="meta-sub">{rango}</p>
+          )}
         </div>
         <div className="meta-head-right">
           <p className="meta-pct" style={{ color }}>{Math.round(porcentaje)}%</p>
-          {onGuardarMeta && !editando && (
+          {onGuardarMeta && !editando && !semanaPasada && (
             <button type="button" className="meta-edit" onClick={abrirEdicion} aria-label="Editar meta">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 20h9" />
