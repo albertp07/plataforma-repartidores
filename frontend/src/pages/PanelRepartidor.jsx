@@ -18,7 +18,8 @@ import MetaSemanal from '../components/MetaSemanal';
 import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
-import LeerComprobanteCombustible from '../components/LeerComprobanteCombustible';
+import ImportarCombustible from '../components/ImportarCombustible';
+import { descripcionCombustible } from '../utils/combustible';
 import ModalParadas from '../components/ModalParadas';
 import ChatAsistente from '../components/ChatAsistente';
 import TabSelector from '../components/TabSelector';
@@ -281,6 +282,7 @@ function PanelRepartidor() {
   const [filaExpandida, setFilaExpandida] = useState(null);
   const [mostrarConfirmarLogout, setMostrarConfirmarLogout] = useState(false);
   const [mostrarCaptura, setMostrarCaptura] = useState(false);
+  const [mostrarCombustible, setMostrarCombustible] = useState(false);
   const [rutaParadas, setRutaParadas] = useState(null); // ruta cuyas paradas se están viendo
 
   useEffect(() => {
@@ -597,17 +599,6 @@ function PanelRepartidor() {
     }
   }
 
-  // Rellena el formulario de combustible con los datos leídos del comprobante (el repartidor puede corregirlos)
-  function aplicarComprobanteCombustible(b) {
-    if (b.producto) setProductoCombustible(b.producto);
-    if (b.litros != null) setLitros(limitarLitros(String(b.litros)));
-    if (b.precioLitro != null) setPrecioLitro(limitarMonto(String(b.precioLitro)));
-    if (b.subtotal != null) setMontoSinDescuento(limitarMonto(String(b.subtotal)));
-    setDescuentoCupon(b.descuentoCupon ? limitarMonto(String(b.descuentoCupon)) : '');
-    setDescuentoPromocion(b.descuentoPromocion ? limitarMonto(String(b.descuentoPromocion)) : '');
-    if (b.fecha && b.fecha <= hoyISO()) setFechaGasto(isoADDMMYYYY(b.fecha));
-  }
-
   function resetearFormularioGasto() {
     setCategoriaGasto(null);
     setMontoGasto('');
@@ -648,12 +639,7 @@ function PanelRepartidor() {
 
     let descripcion = '';
     if (categoriaGasto === 'BENCINA') {
-      descripcion = 'Bencina / Combustible';
-      if (productoCombustible) descripcion += ` · ${productoCombustible === 'DIESEL' ? 'Diésel' : productoCombustible}`;
-      if (litros) descripcion += ` · ${litros} L`;
-      if (precioLitro) descripcion += ` · $${formatoPeso(Number(precioLitro))}/L`;
-      if (kilometraje) descripcion += ` · ${kilometraje} km`;
-      if (descuento > 0) descripcion += ` · Ahorro $${formatoPeso(descuento)}`;
+      descripcion = descripcionCombustible({ producto: productoCombustible, litros, precioLitro, kilometraje, descuento });
     } else if (categoriaGasto === 'MANTENCION') {
       descripcion = `Mantención Furgón · ${detalleMantencion}`;
     } else {
@@ -1123,7 +1109,18 @@ function PanelRepartidor() {
                     <>
                       {categoriaGasto === 'BENCINA' ? (
                         <>
-                          <LeerComprobanteCombustible onLeido={aplicarComprobanteCombustible} disabled={guardando} />
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            style={{ marginBottom: '16px' }}
+                            onClick={() => { setError(''); setMostrarCombustible(true); }}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '6px', marginTop: '-2px' }}>
+                              <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                              <circle cx="12" cy="13" r="3.5" />
+                            </svg>
+                            Registrar combustible con fotos
+                          </button>
 
                           <div className="field">
                             <span className="field-label">Combustible (opcional)</span>
@@ -1473,6 +1470,13 @@ function PanelRepartidor() {
           turnosOcupados={(categoria, iso) => turnosRegistrados(categoria, isoADDMMYYYY(iso))}
           onGuardado={cargarTransacciones}
           onCerrar={() => setMostrarCaptura(false)}
+        />
+      )}
+
+      {mostrarCombustible && (
+        <ImportarCombustible
+          onGuardado={cargarTransacciones}
+          onCerrar={() => setMostrarCombustible(false)}
         />
       )}
 

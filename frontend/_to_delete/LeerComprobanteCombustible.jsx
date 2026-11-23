@@ -3,7 +3,8 @@ import { analizarComprobanteCombustible } from '../services/capturaService';
 import '../styles/comprobante-combustible.css';
 
 // Botón "Leer desde foto": sube el screenshot del comprobante y entrega el borrador al formulario.
-export default function LeerComprobanteCombustible({ onLeido, disabled }) {
+// Con 1 foto autocompleta el formulario; con varias delega en onVarios (ventana de revisión por lote).
+export default function LeerComprobanteCombustible({ onLeido, onVarios, disabled }) {
   const inputRef = useRef(null);
   const [leyendo, setLeyendo] = useState(false);
   const [error, setError] = useState('');
@@ -11,9 +12,18 @@ export default function LeerComprobanteCombustible({ onLeido, disabled }) {
   const [ok, setOk] = useState(false);
 
   async function handleArchivo(e) {
-    const archivo = e.target.files?.[0];
+    const archivos = Array.from(e.target.files || []);
     e.target.value = ''; // permite volver a elegir la misma imagen
-    if (!archivo) return;
+    if (archivos.length === 0) return;
+
+    if (archivos.length > 1) {
+      setError('');
+      setAdvertencias([]);
+      setOk(false);
+      onVarios(archivos);
+      return;
+    }
+    const archivo = archivos[0];
 
     setError('');
     setAdvertencias([]);
@@ -38,6 +48,7 @@ export default function LeerComprobanteCombustible({ onLeido, disabled }) {
         type="file"
         accept="image/jpeg,image/png,image/webp"
         onChange={handleArchivo}
+        multiple
         hidden
       />
       <button
@@ -50,7 +61,7 @@ export default function LeerComprobanteCombustible({ onLeido, disabled }) {
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
           <circle cx="12" cy="13" r="4" />
         </svg>
-        {leyendo ? 'Leyendo comprobante…' : 'Leer desde foto del comprobante'}
+        {leyendo ? 'Leyendo comprobante…' : 'Leer desde foto(s) del comprobante'}
       </button>
 
       {error && <p className="form-error">{error}</p>}
