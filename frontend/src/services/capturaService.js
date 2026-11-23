@@ -8,3 +8,12 @@ export async function analizarCaptura(archivo) {
   const response = await api.post('/capturas/analizar', formData, { timeout: 60000 });
   return response.data;
 }
+
+// Sube la captura del comprobante de combustible y devuelve { borrador, referencia, advertencias }.
+// No guarda nada: el repartidor revisa los campos autocompletados antes de registrar.
+export async function analizarComprobanteCombustible(archivo) {
+  const formData = new FormData();
+  formData.append('imagen', archivo);
+  const response = await api.post('/capturas/combustible', formData, { timeout: 60000 });
+  return response.data;
+}

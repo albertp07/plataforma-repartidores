@@ -18,6 +18,7 @@ import MetaSemanal from '../components/MetaSemanal';
 import RankingSemanas from '../components/RankingSemanas';
 import SelectorRetiros from '../components/SelectorRetiros';
 import ImportarCaptura from '../components/ImportarCaptura';
+import LeerComprobanteCombustible from '../components/LeerComprobanteCombustible';
 import ModalParadas from '../components/ModalParadas';
 import ChatAsistente from '../components/ChatAsistente';
 import TabSelector from '../components/TabSelector';
@@ -264,7 +265,10 @@ function PanelRepartidor() {
   const [kilometraje, setKilometraje] = useState('');
   const [litros, setLitros] = useState('');
   const [montoSinDescuento, setMontoSinDescuento] = useState('');
-  const [descuentoCombustible, setDescuentoCombustible] = useState('');
+  const [productoCombustible, setProductoCombustible] = useState(null); // 'DIESEL' | '93' | '95' | '97'
+  const [precioLitro, setPrecioLitro] = useState('');
+  const [descuentoCupon, setDescuentoCupon] = useState('');
+  const [descuentoPromocion, setDescuentoPromocion] = useState('');
   const [detalleMantencion, setDetalleMantencion] = useState(DETALLES_MANTENCION[0]);
   const [descripcionOtros, setDescripcionOtros] = useState('');
   const [observacionesGasto, setObservacionesGasto] = useState('');
@@ -302,7 +306,7 @@ function PanelRepartidor() {
 
   // Cálculo en vivo: descuento de combustible
   const totalSinDescuento = Number(montoSinDescuento) || 0;
-  const descuento = Number(descuentoCombustible) || 0;
+  const descuento = (Number(descuentoCupon) || 0) + (Number(descuentoPromocion) || 0);
   const totalConDescuento = Math.max(totalSinDescuento - descuento, 0);
 
   // Turnos (AM/PM) que ya tienen registro para la fecha y categoría elegidas
@@ -593,13 +597,27 @@ function PanelRepartidor() {
     }
   }
 
+  // Rellena el formulario de combustible con los datos leídos del comprobante (el repartidor puede corregirlos)
+  function aplicarComprobanteCombustible(b) {
+    if (b.producto) setProductoCombustible(b.producto);
+    if (b.litros != null) setLitros(limitarLitros(String(b.litros)));
+    if (b.precioLitro != null) setPrecioLitro(limitarMonto(String(b.precioLitro)));
+    if (b.subtotal != null) setMontoSinDescuento(limitarMonto(String(b.subtotal)));
+    setDescuentoCupon(b.descuentoCupon ? limitarMonto(String(b.descuentoCupon)) : '');
+    setDescuentoPromocion(b.descuentoPromocion ? limitarMonto(String(b.descuentoPromocion)) : '');
+    if (b.fecha && b.fecha <= hoyISO()) setFechaGasto(isoADDMMYYYY(b.fecha));
+  }
+
   function resetearFormularioGasto() {
     setCategoriaGasto(null);
     setMontoGasto('');
     setKilometraje('');
     setLitros('');
     setMontoSinDescuento('');
-    setDescuentoCombustible('');
+    setProductoCombustible(null);
+    setPrecioLitro('');
+    setDescuentoCupon('');
+    setDescuentoPromocion('');
     setDetalleMantencion(DETALLES_MANTENCION[0]);
     setDescripcionOtros('');
     setObservacionesGasto('');
@@ -631,7 +649,9 @@ function PanelRepartidor() {
     let descripcion = '';
     if (categoriaGasto === 'BENCINA') {
       descripcion = 'Bencina / Combustible';
+      if (productoCombustible) descripcion += ` · ${productoCombustible === 'DIESEL' ? 'Diésel' : productoCombustible}`;
       if (litros) descripcion += ` · ${litros} L`;
+      if (precioLitro) descripcion += ` · $${formatoPeso(Number(precioLitro))}/L`;
       if (kilometraje) descripcion += ` · ${kilometraje} km`;
       if (descuento > 0) descripcion += ` · Ahorro $${formatoPeso(descuento)}`;
     } else if (categoriaGasto === 'MANTENCION') {
@@ -1103,6 +1123,24 @@ function PanelRepartidor() {
                     <>
                       {categoriaGasto === 'BENCINA' ? (
                         <>
+                          <LeerComprobanteCombustible onLeido={aplicarComprobanteCombustible} disabled={guardando} />
+
+                          <div className="field">
+                            <span className="field-label">Combustible (opcional)</span>
+                            <div className="producto-opciones">
+                              {['DIESEL', '93', '95', '97'].map((p) => (
+                                <button
+                                  type="button"
+                                  key={p}
+                                  className={`producto-opcion ${productoCombustible === p ? 'active' : ''}`}
+                                  onClick={() => setProductoCombustible(productoCombustible === p ? null : p)}
+                                >
+                                  {p === 'DIESEL' ? 'Diésel' : p}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                           <div className="field">
                             <span className="field-label">Total sin descuento</span>
                             <input
@@ -1116,16 +1154,29 @@ function PanelRepartidor() {
                             />
                           </div>
 
-                          <div className="field">
-                            <span className="field-label">Descuento por cupón (opcional)</span>
-                            <input
-                              type="number"
-                              min="0"
-                              max="99999999"
-                              value={descuentoCombustible}
-                              onChange={(e) => setDescuentoCombustible(limitarMonto(e.target.value))}
-                              placeholder="Ej: 1500"
-                            />
+                          <div className="field-row">
+                            <div className="field">
+                              <span className="field-label">Descuento cupón (opcional)</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max="99999999"
+                                value={descuentoCupon}
+                                onChange={(e) => setDescuentoCupon(limitarMonto(e.target.value))}
+                                placeholder="Ej: 1500"
+                              />
+                            </div>
+                            <div className="field">
+                              <span className="field-label">Descuento promoción (opcional)</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max="99999999"
+                                value={descuentoPromocion}
+                                onChange={(e) => setDescuentoPromocion(limitarMonto(e.target.value))}
+                                placeholder="Ej: 1500"
+                              />
+                            </div>
                           </div>
 
                           <div className="field-row">
@@ -1135,6 +1186,7 @@ function PanelRepartidor() {
                                 type="number"
                                 min="0"
                                 max="9999"
+                                step="any"
                                 value={litros}
                                 onChange={(e) => setLitros(limitarLitros(e.target.value))}
                                 placeholder="Ej: 8.5"
@@ -1151,6 +1203,18 @@ function PanelRepartidor() {
                                 placeholder="Ej: 45200"
                               />
                             </div>
+                          </div>
+
+                          <div className="field">
+                            <span className="field-label">Precio por litro (opcional)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="99999999"
+                              value={precioLitro}
+                              onChange={(e) => setPrecioLitro(limitarMonto(e.target.value))}
+                              placeholder="Ej: 1313"
+                            />
                           </div>
 
                           <div className="calc-summary">

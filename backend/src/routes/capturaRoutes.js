@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const { analizarCaptura } = require('../controllers/capturaController');
+const { analizarComprobanteCombustible } = require('../controllers/comprobanteCombustibleController');
 const { verificarToken } = require('../middlewares/authMiddleware');
 
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -26,5 +27,6 @@ function subirImagen(req, res, next) {
 }
 
 router.post('/analizar', verificarToken, subirImagen, analizarCaptura);
+router.post('/combustible', verificarToken, subirImagen, analizarComprobanteCombustible);
 
 module.exports = router;

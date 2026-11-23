@@ -1,0 +1,40 @@
+.comprobante-lector {
+  margin-bottom: 16px;
+}
+
+.comprobante-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.comprobante-ok {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-exito, #4ade80);
+}
+
+.producto-opciones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.producto-opcion {
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 1px solid var(--color-borde, rgba(255, 255, 255, 0.15));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.producto-opcion.active {
+  border-color: #f5a524;
+  background: rgba(245, 165, 36, 0.15);
+  color: #f5a524;
+}
